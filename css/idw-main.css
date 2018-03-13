@@ -1,0 +1,29 @@
+body {
+  padding: 0;
+  margin: 0;
+}
+
+html, body, #map {
+  height: 100%;
+  width: 100%;
+}
+
+#p_time {
+  position: absolute;
+  background-color: #FFF;
+  opacity: 1;
+  border-radius: 2px;
+  padding: 5px 5px 5px 5px;
+  right: 5px;
+  top: 5px;
+}
+
+#about {
+  position: absolute;
+  background-color: #FFF;
+  opacity: 0.8;
+  border-radius: 1px;
+  padding: 1px 1px 1px 1px;
+  left: 4px;
+  bottom: 4px;
+}
