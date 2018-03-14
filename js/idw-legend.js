@@ -1,4 +1,36 @@
-  function getColor(d) {
+L.Control.IDWLegend = L.Control.extend({
+  onAdd: function(map) {
+    let div = L.DomUtil.create('div', 'idw-legend'),
+      gradesLabels = '',
+      grades = [0, 1, 3, 6, 8, 10,
+        12, 14, 16, 18, 20,
+        25, 30, 35, 40, 50,
+        60, 70, 80, 90, 100,
+        110, 120, 130, 140, 150
+      ];
+    // grades = [0,11,23,35,41,47,53,58,64,70];
+    // grades = [0,15.4,35.4,54.4,150.4,250.4,350.4,500.4];
+
+    // loop through our density intervals and 
+    // generate a label with a colored square for each interval
+    for (let i = 0; i < grades.length; i++) {
+      let color = this.getColor(grades[i] + 1);
+      gradesLabels +=
+        `<i style="background:${color};">&nbsp;&nbsp;&nbsp;&nbsp;</i>&nbsp;\
+${grades[i]}${(grades[i + 1] ? `&ndash;${grades[i + 1]}` : '+')}<br>`;
+    }
+    div.innerHTML =
+      `<table border=1 bgcolor="#ffffff" cellspacing=0 cellpadding=5>
+        <tr>
+          <td bgcolor="#ffffff">
+            <font size="-1">${gradesLabels}</font>
+          </td>
+        </tr>
+      </table>`;
+
+    return div;
+  },
+  getColor: function(d) {
     d = d / 100.0;
     return d < 0.00 ? "#FFFFFF" :
       d < 0.01 ? "#CCCCFF" :
@@ -39,17 +71,17 @@
       d < 1.5 ? "#A012A0" :
       "#900190";
     /*(
-       return     d < 11? "#9CFF9C":
-            d < 23? "#31FF00":
-            d < 35? "#31CF00":
-            d < 41? "#FFFF00":
-            d < 47? "#FFCF00":
-            d < 53? "#FF9A00":
-            d < 58? "#FF6464":
-            d < 64? "#FF0000":
-            d < 70? "#990000":
-                "#CE30FF";
-  */
+         return     d < 11? "#9CFF9C":
+              d < 23? "#31FF00":
+              d < 35? "#31CF00":
+              d < 41? "#FFFF00":
+              d < 47? "#FFCF00":
+              d < 53? "#FF9A00":
+              d < 58? "#FF6464":
+              d < 64? "#FF0000":
+              d < 70? "#990000":
+                  "#CE30FF";
+    */
     /*
        return     d < 15.4? "#31CF00":
             d < 35.4? "#FFFF00":
@@ -60,35 +92,9 @@
             d < 500.4? "#990000":
                 "#990000";
     */
-
   }
+});
 
-  var legend = L.control({
-    position: 'bottomright'
-  });
-
-  legend.onAdd = function(map) {
-
-    var div = L.DomUtil.create('div', 'info legend'),
-      labels = [],
-      grades = [0, 1, 3, 6, 8, 10,
-        12, 14, 16, 18, 20,
-        25, 30, 35, 40, 50,
-        60, 70, 80, 90, 100,
-        110, 120, 130, 140, 150
-      ];
-    //grades = [0,11,23,35,41,47,53,58,64,70];
-    // grades = [0,15.4,35.4,54.4,150.4,250.4,350.4,500.4];
-
-    // loop through our density intervals and generate a label with a colored square for each interval
-    for (var i = 0; i < grades.length; i++) {
-      div.innerHTML += labels.push(
-        '<i style="background:' + getColor(grades[i] + 1) + ';">&nbsp;&nbsp;&nbsp;&nbsp;</i> ' +
-        grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] : '+'));
-    }
-    div.innerHTML = "<table border=1 bgcolor=\"#ffffff\" cellspacing=0 cellpadding=5><tr><td bgcolor=\"#ffffff\"><font size=\"-1\">" + labels.join('<br>') + "</font></td></tr></table>";
-
-    return div;
-  };
-
-  legend.addTo(map);
+L.control.IDWLegend = function(options) {
+  return new L.Control.IDWLegend(options);
+};

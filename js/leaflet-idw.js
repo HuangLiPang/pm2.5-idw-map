@@ -190,7 +190,7 @@
                 }
             }
         },
-        window.simpleidw = simpleidw
+        window.simpleidw = simpleidw;
 }(),
 
 L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
