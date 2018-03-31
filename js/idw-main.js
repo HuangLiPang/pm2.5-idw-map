@@ -19,6 +19,11 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
       let pm25points = pm25json.points;
       // IDW layer options
       IDWOptions = {
+        // opacity  - the opacity of the IDW layer
+        // cellSize - height and width of each cell, 25 by default
+        // exp      - exponent used for weighting, 1 by default
+        // max      - maximum point values, 1.0 by default
+        // gradient - color gradient config, e.g. {0.4: 'blue', 0.65: 'lime', 1: 'red'}
         opacity: 0.5,
         maxZoom: 16,
         minZoom: 8,
@@ -34,16 +39,18 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
         position: 'bottomleft',
         "latest-updated-time": pm25json['latest-updated-time']
       }).addTo(map);
+
+      // load emission points to map.
+      // add to map after IDWLayer 
+      // in order to let users click 
+      // the info of the emission points
+      emissionPointsLayer = L.mapbox.featureLayer()
+        .loadURL('/data/emission_points_polygons.geojson')
+        .addTo(map);
     })
     .catch(function(error) {
       console.log(error);
     });
-
-  // load emission points to map
-  emissionPointsLayer = L.mapbox.featureLayer()
-    .loadURL('/data/Emission_Points_Polygons.geojson')
-    .addTo(map);
-
   // credits
   creditsTemplate =
     `© <a href='https://www.mapbox.com/map-feedback/'>Mapbox</a>
@@ -56,7 +63,7 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
   let IDWlegend = L.control.IDWLegend({ position: 'bottomright' }).addTo(map);
 
   // make request function in promise
-  // use for loading pm2.5 points
+  // for loading pm2.5 points
   function makeRequest(method, url) {
     return new Promise(function(resolve, reject) {
       var xhr = new XMLHttpRequest();
@@ -81,6 +88,6 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
     });
   }
 
-  // make map become a global variable
+  // make variable map a global variable
   window.map = map;
-}) (this);
+})(this);

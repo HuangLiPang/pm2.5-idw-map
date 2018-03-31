@@ -1,15 +1,16 @@
 L.Control.IDWLogo = L.Control.extend({
-	initialize: function(options) {
-		options['latest-updated-time'] = (typeof options['latest-updated-time'] !== 'undefined') ? options['latest-updated-time'] : new Date()
-		L.setOptions(this, options);
-	},
+  initialize: function(options) {
+    options['latest-updated-time'] = (typeof options['latest-updated-time'] !== 'undefined') ? 
+      options['latest-updated-time'] : new Date();
+    L.setOptions(this, options);
+  },
   onAdd: function(map) {
-  	let date = new Date(this.options['latest-updated-time']),
-  		timezone = date.toString().split(/\s/)[6],
+    let date = new Date(this.options['latest-updated-time']),
+      timezone = date.toString().split(/\s/)[6],
       latestUpdatedTime = date.toLocaleString("en-us", { hour12: false }) + " " + timezone;
 
     let div = L.DomUtil.create('div', 'logo');
-     	div.innerHTML =
+      div.innerHTML =
         `<table border=1 cellspacing=0 cellpadding=0 bgcolor='#000080'>
           <tr bgcolor='#000080'>
             <td align='center'>
@@ -30,5 +31,5 @@ L.Control.IDWLogo = L.Control.extend({
 });
 
 L.control.IDWLogo = function(options) {
-	return new L.Control.IDWLogo(options);
+  return new L.Control.IDWLogo(options);
 }
