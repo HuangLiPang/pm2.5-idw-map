@@ -1,2 +1,7 @@
-# Mac
+# Mac files
 .DS_Store
+
+# demo data
+data/pm25.json
+points_transfer_to_contour/out.geojson
+points_transfer_to_contour/pm25.json
