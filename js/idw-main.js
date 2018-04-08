@@ -12,6 +12,15 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
     maxZoom: 16
   }).setView([23.77, 120.88], 8);
 
+  let overlays = {
+    // emission pointe layer
+    "Emission Points": L.mapbox.featureLayer()
+      .loadURL('./data/emission_points_polygons.geojson').addTo(map),
+
+    // contour layer
+    "PM2.5 Contour": L.mapbox.featureLayer()
+      .loadURL('./data/pm25Contour.geojson').addTo(map)
+  };
   // loading pm2.5 points and update time
   makeRequest('GET', './data/pm25.json')
     .then(function(response) {
@@ -35,18 +44,17 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
       IDWLayer = L.idwLayer(pm25points, IDWOptions)
         .addTo(map);
 
+      overlays['PM2.5 IDW Diagram'] = IDWLayer;
+
       logoContainer = L.control.IDWLogo({
         position: 'bottomleft',
         "latest-updated-time": pm25json['latest-updated-time']
       }).addTo(map);
 
-      // load emission points to map.
-      // add to map after IDWLayer 
-      // in order to let users click 
-      // the info of the emission points
-      emissionPointsLayer = L.mapbox.featureLayer()
-        .loadURL('/data/emission_points_polygons.geojson')
-        .addTo(map);
+      L.control.layers({}, overlays, {
+        collapsed: false,
+        autoZIndex: false
+      }).addTo(map);
     })
     .catch(function(error) {
       console.log(error);
