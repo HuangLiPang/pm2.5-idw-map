@@ -13,7 +13,7 @@ import geojsoncontour
 # Create lat and lon vectors and grid data
 grid_size = 1.0
 latrange = numpy.arange(-90.0, 90.0, grid_size)
-lonrange = numpy.arange(-180.0, 180.0, grid_size)
+lonrange = numpy.arange(0.0, 180.0, grid_size)
 X, Y = numpy.meshgrid(lonrange, latrange)
 Z = numpy.sqrt(X * X + Y * Y)
 
