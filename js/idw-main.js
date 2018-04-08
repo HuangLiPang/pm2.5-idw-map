@@ -2,25 +2,16 @@
 L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkdzl5cjRodSJ9.803z0kHzvQVFMstwjfjCqg';
 (function(window) {
   let map;
-  let IDWLayer, IDWOptions;
-  let emissionPointsLayer;
+  let IDWOptions;
   let creditsTemplate;
   let logoContainer;
+  let overlays;
 
   map = L.mapbox.map('map', 'zetter.i73ka9hn', {
     attributionControl: false,
     maxZoom: 16
   }).setView([23.77, 120.88], 8);
 
-  let overlays = {
-    // emission pointe layer
-    "Emission Points": L.mapbox.featureLayer()
-      .loadURL('./data/emission_points_polygons.geojson').addTo(map),
-
-    // contour layer
-    "PM2.5 Contour": L.mapbox.featureLayer()
-      .loadURL('./data/pm25Contour.geojson').addTo(map)
-  };
   // loading pm2.5 points and update time
   makeRequest('GET', './data/pm25.json')
     .then(function(response) {
@@ -40,35 +31,51 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
         exp: 2,
         max: 200
       };
-      // IDW layer
-      IDWLayer = L.idwLayer(pm25points, IDWOptions)
-        .addTo(map);
 
-      overlays['PM2.5 IDW Diagram'] = IDWLayer;
+      // the diagram must be in the following order
+      // to make the emission point layer be the
+      // most upper layer in the map
+      overlays = {
+        // IDW layer
+        "IDW Diagram": L.idwLayer(pm25points, IDWOptions).addTo(map),
+
+        // contour layer
+        "Contour Diagram": L.mapbox.featureLayer()
+          .loadURL('./data/pm25Contour.geojson').addTo(map),
+
+        // emission pointe layer
+        "Emission Points": L.mapbox.featureLayer()
+          .loadURL('./data/emission_points_polygons.geojson').addTo(map)
+      };
 
       logoContainer = L.control.IDWLogo({
         position: 'bottomleft',
         "latest-updated-time": pm25json['latest-updated-time']
       }).addTo(map);
 
+      // layer controller
       L.control.layers({}, overlays, {
         collapsed: false,
-        autoZIndex: false
+        autoZIndex: true
       }).addTo(map);
     })
     .catch(function(error) {
       console.log(error);
     });
+
   // credits
   creditsTemplate =
     `© <a href='https://www.mapbox.com/map-feedback/'>Mapbox</a>
 © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>
 <a href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a>`;
   // © <a href='http://lass-net.org'>LASS</a> & <a href='https://sites.google.com/site/cclljj/NRL'>IIS-NRL</a>
+
+  // add credits to map
   L.control.attribution()
     .addAttribution(creditsTemplate).addTo(map);
 
-  let IDWlegend = L.control.IDWLegend({ position: 'bottomright' }).addTo(map);
+  // add IDW legend to the map
+  L.control.IDWLegend({ position: 'bottomright' }).addTo(map);
 
   // make request function in promise
   // for loading pm2.5 points
