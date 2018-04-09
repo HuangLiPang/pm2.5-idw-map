@@ -39,14 +39,21 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
         // IDW layer
         "IDW Diagram": L.idwLayer(pm25points, IDWOptions).addTo(map),
 
-        // contour layer
-        "Contour Diagram": L.mapbox.featureLayer()
-          .loadURL('./data/pm25Contour.geojson').addTo(map),
-
         // emission pointe layer
         "Emission Points": L.mapbox.featureLayer()
           .loadURL('./data/emission_points_polygons.geojson').addTo(map)
       };
+
+      let contourIntervals = [1, 2, 3, 5, 10];
+      let contourColor = ["Color", "Grey", "GreyScale"];
+      for(color in contourColor) {
+        for(interval in contourIntervals) {
+          let contourPath = `./data/pm25Contour_${contourColor[color].toLowerCase()}` + 
+                            `_${contourIntervals[interval]}.geojson`;
+          overlays[contourColor[color] + " " + contourIntervals[interval]] = L.mapbox.featureLayer()
+            .loadURL(contourPath);
+        }
+      }
 
       logoContainer = L.control.IDWLogo({
         position: 'bottomleft',

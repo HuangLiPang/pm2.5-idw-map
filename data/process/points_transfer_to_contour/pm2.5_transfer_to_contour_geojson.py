@@ -1,5 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on 2018 Apr.
+
+@author: huanglipang
+"""
+
 import numpy
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 import geojsoncontour
 import json
 from math import sqrt, pow
@@ -143,15 +152,114 @@ for y in range(0, latDiff * precise):
     # calculate pm2.5 value
     pm25Value[y][x] = interpolateValue
 
-# numpy.linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None)
-# Return evenly spaced numbers over a specified interval.
-# num = number of samples to generate
-n_contours = 40
-contourIntervals = numpy.linspace(start = 0, stop = maxPm25Value + 10, num = n_contours)
-
 ##
 ### Create a contour plot plot from grid (lat, lon) data ###
 ##
+
+# color map for pm2.5
+
+pm25Colors = {
+  'red': (
+    (0.0000, 0.000, 1.000), # 0
+    (0.0067, 1.000, 0.800), # 1
+    (0.0200, 0.800, 0.733), # 3
+    (0.0400, 0.733, 0.667), # 6
+    (0.0536, 0.667, 0.600), # 8
+    (0.0667, 0.600, 0.533), # 10
+    
+    (0.0800, 0.566, 0.566), # 12
+    (0.0938, 0.566, 0.510), # 14
+    (0.1072, 0.510, 0.400), # 16
+    (0.1206, 0.400, 0.314), # 18
+    (0.1340, 0.314, 0.290), # 20
+    
+    (0.1675, 0.980, 0.980), # 25
+    (0.2000, 0.980, 0.918), # 30
+    (0.2345, 0.918, 0.855), # 35
+    (0.2680, 0.855, 0.792), # 40
+    (0.3350, 0.792, 0.729), # 50
+    
+    (0.4000, 0.100, 0.100), # 60
+    (0.4690, 0.100, 0.933), # 70
+    (0.5360, 0.933, 0.867), # 80
+    (0.6000, 0.867, 0.800), # 90
+    (0.6670, 0.800, 0.733), # 100
+    
+    (0.7370, 0.878, 0.878), # 110
+    (0.8000, 0.878, 0.816), # 120
+    (0.8710, 0.816, 0.753), # 130
+    (0.9380, 0.753, 0.690), # 140
+    (1.0000, 0.690, 0.627)  # 150
+  ), 
+
+  'green': (
+    (0.0000, 0.000, 1.000), # 0
+    (0.0067, 1.000, 0.800), # 1
+    (0.0200, 0.800, 0.733), # 3
+    (0.0400, 0.733, 0.667), # 6
+    (0.0536, 0.667, 0.600), # 8
+    (0.0667, 0.600, 0.533), # 10
+
+    (0.0800, 0.980, 0.980), # 12
+    (0.0938, 0.980, 0.918), # 14
+    (0.1072, 0.918, 0.855), # 16
+    (0.1206, 0.855, 0.792), # 18
+    (0.1340, 0.792, 0.729), # 20
+
+    (0.1675, 0.980, 0.980), # 25
+    (0.2000, 0.980, 0.918), # 30
+    (0.2345, 0.918, 0.855), # 35
+    (0.2680, 0.855, 0.792), # 40
+    (0.3350, 0.792, 0.729), # 50
+
+    (0.4000, 0.467, 0.467), # 60
+    (0.4690, 0.467, 0.400), # 70
+    (0.5360, 0.400, 0.333), # 80
+    (0.6000, 0.333, 0.267), # 90
+    (0.6670, 0.267, 0.200), # 100
+
+    (0.7370, 0.337, 0.337), # 110
+    (0.8000, 0.337, 0.271), # 120
+    (0.8710, 0.271, 0.204), # 130
+    (0.9380, 0.204, 0.137), # 140
+    (1.0000, 0.137, 0.071)  # 150
+  ), 
+
+  'blue': (
+    (0.0000, 0.000, 1.000), # 0
+    (0.0067, 1.000, 1.000), # 1
+    (0.0200, 1.000, 0.933), # 3
+    (0.0400, 0.933, 0.867), # 6
+    (0.0536, 0.867, 0.800), # 8
+    (0.0667, 0.800, 0.733), # 10
+
+    (0.0800, 0.588, 0.588), # 12
+    (0.0938, 0.588, 0.392), # 14
+    (0.1072, 0.392, 0.212), # 16
+    (0.1206, 0.212, 0.173), # 18
+    (0.1340, 0.173, 0.149), # 20
+
+    (0.1675, 0.365, 0.365), # 25
+    (0.2000, 0.365, 0.275), # 30
+    (0.2345, 0.275, 0.302), # 35
+    (0.2680, 0.302, 0.259), # 40
+    (0.3350, 0.259, 0.212), # 50
+
+    (0.4000, 0.467, 0.467), # 60
+    (0.4690, 0.467, 0.400), # 70
+    (0.5360, 0.400, 0.333), # 80
+    (0.6000, 0.333, 0.267), # 90
+    (0.6670, 0.267, 0.200), # 100
+
+    (0.7370, 0.878, 0.878), # 110
+    (0.8000, 0.878, 0.816), # 120
+    (0.8710, 0.816, 0.753), # 130
+    (0.9380, 0.753, 0.690), # 140
+    (1.0000, 0.690, 0.627)  # 150
+  )
+}
+colorMapName = "pm2.5 color map"
+pm25ColorMap = LinearSegmentedColormap(colorMapName, pm25Colors)
 
 # Create a new figure
 figure = plt.figure()
@@ -159,18 +267,63 @@ figure = plt.figure()
 # only one figure show on console
 ax = figure.add_subplot(111)
 
+# numpy.linspace(start, stop, num=50, endpoint=True, retstep=False, dtype=None)
+# Return evenly spaced numbers over a specified interval.
+# num = number of samples to generate
+n_contours = {
+  "1": 150,
+  "2": 75,
+  "3": 50,
+  "5": 30,
+  "10": 15
+}
+
+contourIntervals = {
+  "1": numpy.linspace(start = 0, stop = 150, num = n_contours["1"]),
+  "2": numpy.linspace(start = 0, stop = 150, num = n_contours["2"]),
+  "3": numpy.linspace(start = 0, stop = 150, num = n_contours["3"]),
+  "5": numpy.linspace(start = 0, stop = 150, num = n_contours["5"]),
+  "10": numpy.linspace(start = 0, stop = 150, num = n_contours["10"])
+}
 # plot contour
-contour = ax.contour(lonRange, latRange, pm25Value,\
-                     levels = contourIntervals, cmap = plt.cm.jet)
 
-##
-### Convert matplotlib contourf to geojson ###
-##
+for interval in contourIntervals:
+  contour_color = ax.contour(lonRange, latRange, pm25Value,\
+                     levels = contourIntervals[interval], cmap = pm25ColorMap)
 
-geojsoncontour.contour_to_geojson(
-    contour = contour,
-    geojson_filepath = '../../pm25Contour.geojson',
+  contour_grey = ax.contour(lonRange, latRange, pm25Value,\
+                     levels = contourIntervals[interval], cmap = None, colors = 'grey')
+
+  contour_greyscale = ax.contour(lonRange, latRange, pm25Value,\
+                     levels = contourIntervals[interval], cmap = plt.cm.binary)
+
+  ##
+  ### Convert matplotlib contour to geojson ###
+  ##
+
+  geojsoncontour.contour_to_geojson(
+    contour = contour_color,
+    geojson_filepath = '../../pm25Contour_color_' + interval + '.geojson',
     min_angle_deg = 10.0,
     ndigits = 3,
+    stroke_width = 2,
     unit = 'μg/m^3'
-)
+  )
+
+  geojsoncontour.contour_to_geojson(
+    contour = contour_grey,
+    geojson_filepath = '../../pm25Contour_grey_' + interval + '.geojson',
+    min_angle_deg = 10.0,
+    ndigits = 3,
+    stroke_width = 2,
+    unit = 'μg/m^3'
+  )
+  
+  geojsoncontour.contour_to_geojson(
+    contour = contour_greyscale,
+    geojson_filepath = '../../pm25Contour_greyscale_' + interval + '.geojson',
+    min_angle_deg = 10.0,
+    ndigits = 3,
+    stroke_width = 2,
+    unit = 'μg/m^3'
+  )
