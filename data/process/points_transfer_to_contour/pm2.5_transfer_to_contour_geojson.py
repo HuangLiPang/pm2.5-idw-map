@@ -11,7 +11,27 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import geojsoncontour
 import json
-from math import sqrt, pow
+from math import sqrt, pow, log
+
+# calculate idw
+def idwCalculation(x1, x2, y1, y2, cellSN, cellSD, expFactor):
+  for y in range(y1, y2):
+    for x in range(x1, x2):
+      if(cellSD[y][x] < 0.0):
+        # center of the cell
+        # cellSD = -1
+        continue
+      
+      # calculate distance
+      distance = sqrt(pow(((x - lon) / precise * 111.320), 2) +\
+                pow(((y - lat) / precise * 110.574), 2))
+      if(distance > effectiveRange):
+        continue
+      
+      if distance > 0:
+        distanceExp = pow(distance, expFactor)
+        cellSN[y][x] += value / distanceExp
+        cellSD[y][x] += 1 / distanceExp
 
 ##
 ### Create lat and lon vectors and grid data ###
@@ -32,7 +52,7 @@ boundaries = {
 # 1 degree lon = 111.320 km
 # 1 degree lat = 110.574 km
 precise = 1000
-logPrecise = 3
+logPrecise = int(log(precise, 10)) + 1
 grid_size = 1.0 / precise
 # effective range in KM
 effectiveRange = 10
@@ -57,19 +77,18 @@ latRange = numpy.arange(boundaries["lat"]["min"],\
 # cell[lat][lon]
 latDiff = int(boundaries["lat"]["max"] - boundaries["lat"]["min"])
 lonDiff = int(boundaries["lon"]["max"] - boundaries["lon"]["min"])
+
+lonCellLength = lonDiff * precise
+latCellLength = latDiff * precise
 # cell summation numerator
-cellSN = numpy.zeros((latDiff * precise, lonDiff * precise),\
+cellSN = numpy.zeros((latCellLength, lonCellLength),\
                      dtype=float, order='C')
 # cell summation denominator
-cellSD = numpy.zeros((latDiff * precise, lonDiff * precise),\
+cellSD = numpy.zeros((latCellLength, lonCellLength),\
                      dtype=float, order='C')
 
-pm25Value = numpy.zeros((latDiff * precise, lonDiff * precise),\
+pm25Value = numpy.zeros((latCellLength, lonCellLength),\
                      dtype=float, order='C')
-# Return coordinate matrices from coordinate vectors.
-#X, Y = numpy.meshgrid(lonRange, latRange)
-
-maxPm25Value = 0.0
 
 for point in points:
   # point[lat][lon][value]
@@ -77,9 +96,6 @@ for point in points:
   lat = round(point[0], logPrecise)
   lon = round(point[1], logPrecise)
   value = point[2]
-  
-  if(value > maxPm25Value):
-    maxPm25Value = value
   
   if(lat >= boundaries["lat"]["min"] and lat < boundaries["lat"]["max"] and \
      lon >= boundaries["lon"]["min"] and lon < boundaries["lon"]["max"]):
@@ -98,51 +114,36 @@ for point in points:
     y2 = int(round(y2 - boundaries["lat"]["min"], logPrecise) * precise)
     
     # check x1, x2, y1, y2 in the index boundaries
-    if(x1 < 0):
-      x1 = 0
     if(x2 < 0):
       continue
-    if(x1 >= lonDiff * precise):
+    if(x1 >= lonCellLength):
       continue
-    if(x2 >= lonDiff * precise):
-      x2 = lonDiff * precise - 1
-    
-    if(y1 < 0):
-      y1 = 0
     if(y2 < 0):
       continue
-    if(y1 >= latDiff * precise):
+    if(y1 >= latCellLength):
       continue
-    if(y2 >= latDiff * precise):
+    
+    if(x1 < 0):
+      x1 = 0
+    if(x2 >= lonCellLength):
+      x2 = lonDiff * precise - 1
+    if(y1 < 0):
+      y1 = 0
+    if(y2 >= latCellLength):
       y2 = latDiff * precise - 1
     
     # transfer lat lon into index
     lat = int((lat - boundaries["lat"]["min"]) * precise)
     lon = int((lon - boundaries["lon"]["min"]) * precise)
+    # set cell center values
+    cellSN[lat][lon] = value
+    cellSD[lat][lon] = -1
     
-    # calculate distance
-    for y in range(y1, y2):
-      for x in range(x1, x2):
-        if(cellSD[y][x] < 0.0):
-          # center of the cell
-          # cellSD = -1
-          continue
-
-        distance = sqrt(pow(((x - lon) / precise * 111.320), 2) +\
-                  pow(((y - lat) / precise * 110.574), 2))
-        if(distance > effectiveRange):
-          continue
-        
-        if distance == 0:
-          cellSN[y][x] = value
-          cellSD[y][x] = -1
-        else:
-          distanceExp = pow(distance, expFactor)
-          cellSN[y][x] += value / distanceExp
-          cellSD[y][x] += 1 / distanceExp
+    # calculate idw
+    idwCalculation(x1, x2, y1, y2, cellSN, cellSD, expFactor)
     
-for y in range(0, latDiff * precise):
-  for x in range(0, lonDiff * precise):
+for y in range(0, latCellLength):
+  for x in range(0, lonCellLength):
     if(cellSD[y][x] < 0):
       cellSD[y][x] = 1
     interpolateValue = 0

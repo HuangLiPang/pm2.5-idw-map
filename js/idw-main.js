@@ -44,7 +44,7 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
           .loadURL('./data/emission_points_polygons.geojson').addTo(map)
       };
 
-      let contourIntervals = [1, 2, 3, 5, 10];
+      let contourIntervals = [2, 5, 10];
       let contourColor = ["Color", "Grey", "GreyScale"];
       for(color in contourColor) {
         for(interval in contourIntervals) {
@@ -65,6 +65,9 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
         collapsed: false,
         autoZIndex: true
       }).addTo(map);
+
+      // add contour layer to map
+      overlays["Grey 10"].addTo(map);
     })
     .catch(function(error) {
       console.log(error);
