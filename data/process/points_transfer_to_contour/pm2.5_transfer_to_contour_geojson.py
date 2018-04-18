@@ -8,7 +8,7 @@ Created on 2018 Apr.
 
 import numpy
 import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
+# from matplotlib.colors import LinearSegmentedColormap
 import geojsoncontour
 import json
 from math import sqrt, pow, log
@@ -38,7 +38,7 @@ def idwCalculation(x1, x2, y1, y2, cellSN, cellSD, expFactor):
 ##
 
 # loading data points [lat, lon, value]
-data = json.load(open('../../pm25.json'))
+data = json.load(open('../data/pm25.json'))
 points = data['points']
 
 # lat lon boundary
@@ -158,7 +158,7 @@ for y in range(0, latCellLength):
 ##
 
 # color map for pm2.5
-
+"""
 pm25Colors = {
   'red': (
     (0.0000, 0.000, 1.000), # 0
@@ -259,8 +259,10 @@ pm25Colors = {
     (1.0000, 0.690, 0.627)  # 150
   )
 }
+
 colorMapName = "pm2.5 color map"
 pm25ColorMap = LinearSegmentedColormap(colorMapName, pm25Colors)
+"""
 
 # Create a new figure
 figure = plt.figure()
@@ -272,36 +274,37 @@ ax = figure.add_subplot(111)
 # Return evenly spaced numbers over a specified interval.
 # num = number of samples to generate
 n_contours = {
-  "1": 150,
+  # "1": 150,
   "2": 75,
-  "3": 50,
+  # "3": 50,
   "5": 30,
   "10": 15
 }
 
 contourIntervals = {
-  "1": numpy.linspace(start = 0, stop = 150, num = n_contours["1"]),
+  # "1": numpy.linspace(start = 0, stop = 150, num = n_contours["1"]),
   "2": numpy.linspace(start = 0, stop = 150, num = n_contours["2"]),
-  "3": numpy.linspace(start = 0, stop = 150, num = n_contours["3"]),
+  # "3": numpy.linspace(start = 0, stop = 150, num = n_contours["3"]),
   "5": numpy.linspace(start = 0, stop = 150, num = n_contours["5"]),
   "10": numpy.linspace(start = 0, stop = 150, num = n_contours["10"])
 }
 # plot contour
 
 for interval in contourIntervals:
-  contour_color = ax.contour(lonRange, latRange, pm25Value,\
-                     levels = contourIntervals[interval], cmap = pm25ColorMap)
+  # contour_color = ax.contour(lonRange, latRange, pm25Value,\
+                     # levels = contourIntervals[interval], cmap = pm25ColorMap)
 
   contour_grey = ax.contour(lonRange, latRange, pm25Value,\
-                     levels = contourIntervals[interval], cmap = None, colors = 'grey')
+                     levels = contourIntervals[interval],\
+                     cmap = None, colors = 'grey')
 
-  contour_greyscale = ax.contour(lonRange, latRange, pm25Value,\
-                     levels = contourIntervals[interval], cmap = plt.cm.binary)
+  # contour_greyscale = ax.contour(lonRange, latRange, pm25Value,\
+                     # levels = contourIntervals[interval], cmap = plt.cm.binary)
 
   ##
   ### Convert matplotlib contour to geojson ###
   ##
-
+  """
   geojsoncontour.contour_to_geojson(
     contour = contour_color,
     geojson_filepath = '../../pm25Contour_color_' + interval + '.geojson',
@@ -310,21 +313,22 @@ for interval in contourIntervals:
     stroke_width = 2,
     unit = 'μg/m^3'
   )
-
+  """
   geojsoncontour.contour_to_geojson(
     contour = contour_grey,
-    geojson_filepath = '../../pm25Contour_grey_' + interval + '.geojson',
+    geojson_filepath = '../data/pm25Contour_grey_' + interval + '.geojson',
     min_angle_deg = 10.0,
     ndigits = 3,
     stroke_width = 2,
     unit = 'μg/m^3'
   )
-  
+  """
   geojsoncontour.contour_to_geojson(
     contour = contour_greyscale,
-    geojson_filepath = '../../pm25Contour_greyscale_' + interval + '.geojson',
+    geojson_filepath = '../data/pm25Contour_greyscale_' + interval + '.geojson',
     min_angle_deg = 10.0,
     ndigits = 3,
     stroke_width = 2,
     unit = 'μg/m^3'
   )
+  """
