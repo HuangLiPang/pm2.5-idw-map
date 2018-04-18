@@ -2,22 +2,23 @@ L.Control.IDWLegend = L.Control.extend({
   onAdd: function(map) {
     let div = L.DomUtil.create('div', 'idw-legend'),
       gradesLabels = '',
-      grades = [0, 1, 3, 6, 8, 10,
-        12, 14, 16, 18, 20,
-        25, 30, 35, 40, 50,
-        60, 70, 80, 90, 100,
-        110, 120, 130, 140, 150
+      grades = [
+          0,   1,   3,   6,   8, 
+         10,  12,  14,  16,  18, 
+         20,  25,  30,  35,  40, 
+         50,  60,  70,  80,  90, 
+        100, 110, 120, 130, 140, 150
       ];
     // grades = [0,11,23,35,41,47,53,58,64,70];
     // grades = [0,15.4,35.4,54.4,150.4,250.4,350.4,500.4];
 
     // loop through our density intervals and 
     // generate a label with a colored square for each interval
-    for (let i = 0; i < grades.length; i++) {
+    for(let i = 0; i < grades.length; i++) {
       let color = this.getColor(grades[i] + 1);
       gradesLabels +=
-        `<i style="background:${color};">&nbsp;&nbsp;&nbsp;&nbsp;</i>&nbsp;\
-${grades[i]}${(grades[i + 1] ? `&ndash;${grades[i + 1]}` : '+')}<br>`;
+        `<i style="background:${color};">&nbsp;&nbsp;&nbsp;&nbsp;</i>&nbsp;` + 
+        `${grades[i]}${(grades[i + 1] ? `&ndash;${grades[i + 1]}` : '+')}<br>`;
     }
     div.innerHTML =
       `<table border=1 bgcolor="#ffffff" cellspacing=0 cellpadding=5>
