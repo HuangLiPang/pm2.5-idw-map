@@ -1,5 +1,6 @@
 // mapbox access token
-L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkdzl5cjRodSJ9.803z0kHzvQVFMstwjfjCqg';
+L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJ' + 
+  'hIjoiY2oyNXBwdXVxMDB0YTMybzdkdzl5cjRodSJ9.803z0kHzvQVFMstwjfjCqg';
 (function(window) {
   let map;
   let IDWOptions;
@@ -44,15 +45,13 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
           .loadURL('./data/emission_points_polygons.geojson').addTo(map)
       };
 
+      // add contour layers to overlays
       let contourIntervals = [2, 5, 10];
-      let contourColor = ["Color", "Grey", "GreyScale"];
-      for(color in contourColor) {
-        for(interval in contourIntervals) {
-          let contourPath = `./data/pm25Contour_${contourColor[color].toLowerCase()}` + 
-                            `_${contourIntervals[interval]}.geojson`;
-          overlays[contourColor[color] + " " + contourIntervals[interval]] = L.mapbox.featureLayer()
-            .loadURL(contourPath);
-        }
+      for (interval in contourIntervals) {
+        let contourPath = `./data/pm25Contour_grey_` +
+          `${contourIntervals[interval]}.geojson`;
+        overlays[`Contour Interval: ${contourIntervals[interval]}`] = L.mapbox.featureLayer()
+          .loadURL(contourPath);
       }
 
       logoContainer = L.control.IDWLogo({
@@ -67,7 +66,7 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
       }).addTo(map);
 
       // add contour layer to map
-      overlays["Grey 10"].addTo(map);
+      overlays["Contour Interval: 10"].addTo(map);
     })
     .catch(function(error) {
       console.log(error);
@@ -78,7 +77,8 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJhIjoiY2oyNXBwdXVxMDB0YTMybzdkd
     `© <a href='https://www.mapbox.com/map-feedback/'>Mapbox</a>
 © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>
 <a href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a>`;
-  // © <a href='http://lass-net.org'>LASS</a> & <a href='https://sites.google.com/site/cclljj/NRL'>IIS-NRL</a>
+  // © <a href='http://lass-net.org'>LASS</a> & 
+  // <a href='https://sites.google.com/site/cclljj/NRL'>IIS-NRL</a>
 
   // add credits to map
   L.control.attribution()
