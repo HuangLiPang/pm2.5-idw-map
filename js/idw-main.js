@@ -1,18 +1,23 @@
 // mapbox access token
-L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJ' + 
-  'hIjoiY2oyNXBwdXVxMDB0YTMybzdkdzl5cjRodSJ9.803z0kHzvQVFMstwjfjCqg';
+// L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJ' + 
+//   'hIjoiY2oyNXBwdXVxMDB0YTMybzdkdzl5cjRodSJ9.803z0kHzvQVFMstwjfjCqg';
 (function(window) {
   let map;
   let IDWOptions;
   let creditsTemplate;
   let logoContainer;
   let overlays;
+  let OpenStreetMap_Mapnik;
 
-  map = L.mapbox.map('map', 'zetter.i73ka9hn', {
+  map = L.map('map', {
     attributionControl: false,
     maxZoom: 16
   }).setView([23.77, 120.88], 8);
 
+  OpenStreetMap_Mapnik = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 16,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map);
   // loading pm2.5 points and update time
   makeRequest('GET', './data/pm25.json')
     .then(function(response) {
@@ -73,10 +78,10 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJ' +
     });
 
   // credits
-  creditsTemplate =
-    `© <a href='https://www.mapbox.com/map-feedback/'>Mapbox</a>
-© <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>
-<a href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a>`;
+  creditsTemplate = `<a href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a>`;
+  // Credits not used
+  // © <a href='https://www.mapbox.com/map-feedback/'>Mapbox</a>
+  // © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>
   // © <a href='http://lass-net.org'>LASS</a> & 
   // <a href='https://sites.google.com/site/cclljj/NRL'>IIS-NRL</a>
 
@@ -91,7 +96,7 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJ' +
   // for loading pm2.5 points
   function makeRequest(method, url) {
     return new Promise(function(resolve, reject) {
-      var xhr = new XMLHttpRequest();
+      let xhr = new XMLHttpRequest();
       xhr.open(method, url);
       xhr.onload = function() {
         if (this.status >= 200 && this.status < 300) {
