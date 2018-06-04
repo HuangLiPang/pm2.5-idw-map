@@ -33,6 +33,8 @@ let pm25json = {
   "points": []
 };
 
+let logMessage = "", errorMessage = "";
+
 MongoClient.connect(dbUrl)
   .then(client => {
     let db = client.db(dbName);
@@ -59,10 +61,14 @@ MongoClient.connect(dbUrl)
         client.close();
         fs.writeFile("./test_data/pm25.json", JSON.stringify(pm25json), function(err) {
           if (err) {
-            console.log("[Write File Error]:")
+            errorMessage = "[Write File Error]:";
             throw err;
           }
-          console.log(`${counter} points was saved in pm25.json at ${now}.`);
+          logMessage = `${counter} points was saved in pm25.json at ${now}.\r\n`;
+          fs.appendFile('log', logMessage, function (err) {
+            if (err) throw err;
+            console.log('Saved!');
+          });
         });
       })
       .catch(error => {
