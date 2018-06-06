@@ -22,6 +22,8 @@
 <script src="js/idw-main.js"></script>
 <script type="text/javascript">
   // Taichung
-  map.setView([24.205, 120.670], 10);
+  document.getElementById("map").onload = function() {
+    map.setView([24.205, 120.670], 10);
+  };
 </script>
 </html>
