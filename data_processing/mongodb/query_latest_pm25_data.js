@@ -10,13 +10,12 @@ const dbName = "lassdb";
 
 // Query time
 const now = new Date(),
-  // nowLocaleDate = [year, month, date, hour]
+  // nowUTCDate = [year, month, date]
   // all items are string.
-  nowLocaleDate = [
-    now.getFullYear(),
-    now.getMonth() + 1,
-    now.getDate(),
-    now.getHours()
+  nowUTCDate = [
+    now.getUTCFullYear(),
+    now.getUTCMonth() + 1,
+    now.getUTCDate(),
   ].map(date => {
     date = date.toString();
     if (date.length !== 4) {
@@ -26,7 +25,10 @@ const now = new Date(),
     }
     return date;
   }),
-  nowLocaleDateString = `${nowLocaleDate[0]}-${nowLocaleDate[1]}-${nowLocaleDate[2]}`;
+  // In mongodb, the date and time is in UTC
+  nowUTCDateString = `${nowUTCDate[0]}-${nowUTCDate[1]}-${nowUTCDate[2]}`;
+
+const filePath = "/Users/iisnrl/Documents/test_HuangLiPang/mongodb/";
 
 let pm25json = {
   "latest-updated-time": now,
@@ -43,7 +45,7 @@ MongoClient.connect(dbUrl)
       .find({
         "device_id": { $exists: true },
         "s_d0": { $exists: true },
-        "date": nowLocaleDateString
+        "date": nowUTCDateString
       }, {
         loc: 1,   // location
         s_d0: 1,  // pm2.5
@@ -59,13 +61,13 @@ MongoClient.connect(dbUrl)
       })
       .then(() => {
         client.close();
-        fs.writeFile("./test_data/pm25.json", JSON.stringify(pm25json), function(err) {
+        fs.writeFile(`${filePath}test_data/pm25.json`, JSON.stringify(pm25json), function(err) {
           if (err) {
             errorMessage = "[Write File Error]:";
             throw err;
           }
           logMessage = `${counter} points was saved in pm25.json at ${now}.\r\n`;
-          fs.appendFile('log', logMessage, function (err) {
+          fs.appendFile(`${filePath}log`, logMessage, function (err) {
             if (err) throw err;
             console.log('Saved!');
           });
