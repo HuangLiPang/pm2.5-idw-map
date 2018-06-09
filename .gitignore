@@ -2,6 +2,10 @@
 .DS_Store
 
 # demo data
-data/pm25.json
-points_transfer_to_contour/out.geojson
-points_transfer_to_contour/pm25.json
+*.json
+*.geojson
+*.log
+
+# config data
+.env
+.python-version
