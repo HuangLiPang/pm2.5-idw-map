@@ -2,7 +2,9 @@
 const fs = require("fs");
 const MongoClient = require("mongodb").MongoClient;
 // loading config variable from .env
-const dotenv = require('dotenv').config();
+// executed by crontab, we need to add .env path
+const dotenvPath = "";
+const dotenv = require('dotenv').config({path: dotenvPath});
 
 // Connection URL
 const dbUrl = process.env.DB_URL;
@@ -12,6 +14,19 @@ const dbName = "lassdb";
 
 // Query time
 const now = new Date(),
+  nowlocaleDate = [
+    now.getFullYear(),
+    now.getMonth() + 1,
+    now.getDate()
+  ].map(date => {
+    date = date.toString();
+    if (date.length !== 4) {
+      if (date < 10) {
+        date = '0' + date;
+      }
+    }
+    return date;
+  }),
   // nowUTCDate = [year, month, date]
   // all items are string.
   nowUTCDate = [
@@ -45,6 +60,7 @@ const now = new Date(),
     }
     return date;
   }),
+  nowlocaleDateString = `${nowlocaleDate[0]}-${nowlocaleDate[1]}-${nowlocaleDate[2]}`,
   // In mongodb, the date and time is in UTC
   nowUTCDateString = `${nowUTCDate[0]}-${nowUTCDate[1]}-${nowUTCDate[2]}`,
   yesterdayUTCDateString = `${yesterdayUTCDate[0]}-${yesterdayUTCDate[1]}-${yesterdayUTCDate[2]}`;
@@ -92,12 +108,12 @@ MongoClient.connect(dbUrl)
             logMessage = `${counter} points was saved in pm25.json at ${now}.\r\n`;
           }
           // Write log file
-          fs.appendFile(`${filePath}data_processing/mongodb/log/${nowUTCDateString}.log`, logMessage, function (err) {
+          fs.appendFile(`${filePath}data_processing/mongodb/log/${nowlocaleDateString}.log`, logMessage, function (err) {
             if (err) {
-              console.log(`[Append file Error]: ${nowUTCDateString}.log not saved at ${now}`)
+              console.log(`[Append file Error]: ${nowlocaleDateString}.log not saved at ${now}`)
               console.log(err.message);
             } else {
-              console.log(`${nowUTCDateString}.log saved at ${now}`);
+              console.log(`${nowlocaleDateString}.log saved at ${now}`);
             }
           });
         });
