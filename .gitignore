@@ -5,3 +5,6 @@
 *.json
 *.geojson
 log
+
+# config data
+.env

@@ -1,9 +1,11 @@
 "use strict";
 const fs = require("fs");
 const MongoClient = require("mongodb").MongoClient;
+// loading config variable from .env
+const dotenv = require('dotenv').config();
 
 // Connection URL
-const dbUrl = "mongodb://iisnrl:iisnrl619@140.109.20.206:27017";
+const dbUrl = process.env.DB_URL;
 
 // Database Name
 const dbName = "lassdb";
@@ -15,7 +17,25 @@ const now = new Date(),
   nowUTCDate = [
     now.getUTCFullYear(),
     now.getUTCMonth() + 1,
-    now.getUTCDate(),
+    now.getUTCDate()
+  ].map(date => {
+    date = date.toString();
+    if (date.length !== 4) {
+      if (date < 10) {
+        date = '0' + date;
+      }
+    }
+    return date;
+  }),
+  yesterday = (function(now) {
+    let yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+    return yesterday;
+  })(now),
+  yesterdayUTCDate = [
+    yesterday.getUTCFullYear(),
+    yesterday.getUTCMonth() + 1,
+    yesterday.getUTCDate()
   ].map(date => {
     date = date.toString();
     if (date.length !== 4) {
@@ -26,26 +46,27 @@ const now = new Date(),
     return date;
   }),
   // In mongodb, the date and time is in UTC
-  nowUTCDateString = `${nowUTCDate[0]}-${nowUTCDate[1]}-${nowUTCDate[2]}`;
+  nowUTCDateString = `${nowUTCDate[0]}-${nowUTCDate[1]}-${nowUTCDate[2]}`,
+  yesterdayUTCDateString = `${yesterdayUTCDate[0]}-${yesterdayUTCDate[1]}-${yesterdayUTCDate[2]}`;
 
-const filePath = "/Users/iisnrl/Documents/test_HuangLiPang/mongodb/";
-
+const filePath = process.env.DIRECTORY;
 let pm25json = {
   "latest-updated-time": now,
   "points": []
 };
-
-let logMessage = "", errorMessage = "";
+let logMessage = "";
 
 MongoClient.connect(dbUrl)
   .then(client => {
     let db = client.db(dbName);
-    let counter = 0; // used for counting how many queried items.
+    // used for counting how many queried items.
+    let counter = 0;
+
     db.collection("latest")
       .find({
         "device_id": { $exists: true },
         "s_d0": { $exists: true },
-        "date": nowUTCDateString
+        $or: [{"date": nowUTCDateString}, {"date": yesterdayUTCDateString}]
       }, {
         loc: 1,   // location
         s_d0: 1,  // pm2.5
@@ -61,24 +82,32 @@ MongoClient.connect(dbUrl)
       })
       .then(() => {
         client.close();
-        fs.writeFile(`${filePath}test_data/pm25.json`, JSON.stringify(pm25json), function(err) {
+        // Output data.json
+        fs.writeFile(`${filePath}data/data.json`, JSON.stringify(pm25json), function(err) {
           if (err) {
-            errorMessage = "[Write File Error]:";
-            throw err;
+            console.log("[Write file Error]: data.json not saved at ${now}");
+            console.log(err.message);
+            logMessage = err.message;
+          } else {
+            logMessage = `${counter} points was saved in pm25.json at ${now}.\r\n`;
           }
-          logMessage = `${counter} points was saved in pm25.json at ${now}.\r\n`;
-          fs.appendFile(`${filePath}log`, logMessage, function (err) {
-            if (err) throw err;
-            console.log('Saved!');
+          // Write log file
+          fs.appendFile(`${filePath}data_processing/mongodb/log/${nowUTCDateString}.log`, logMessage, function (err) {
+            if (err) {
+              console.log(`[Append file Error]: ${nowUTCDateString}.log not saved at ${now}`)
+              console.log(err.message);
+            } else {
+              console.log(`${nowUTCDateString}.log saved at ${now}`);
+            }
           });
         });
       })
       .catch(error => {
-        console.log("[Collection Error]: ");
-        console.log(error);
+        console.log(`[Collection Error]: at ${now}`);
+        console.log(error.message);
       });
   })
   .catch(error => {
-    console.log("[MongoClient Error]: ");
-    console.log(error);
+    console.log(`[MongoClient Error]: at ${now}`);
+    console.log(error.message);
   });
