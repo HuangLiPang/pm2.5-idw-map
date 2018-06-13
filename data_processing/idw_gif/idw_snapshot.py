@@ -1,25 +1,30 @@
 #!/usr/bin/env python
-# version config
-# 	python: 			2.7.14
-# 	selenium: 		3.4.3
-# 	chromedriver: 2.38.3
+"""
+Taking snapshot from pm2.5 idw map to making gif
 
-# selenium screenshot doc: https://selenium-python.readthedocs.io/api.html?highlight=save_screenshot
+versions
+  python:       2.7.14
+  selenium:     3.4.3
+  chromedriver: 2.38.3
+"""
 
+# selenium screenshot doc: 
+# https://selenium-python.readthedocs.io/api.html?highlight=save_screenshot
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 import time
 import datetime
 from datetime import timedelta
+import config
 
 # parameters & settings ------------------------------
-areas = ['Taiwan', 'Taipei', 'Taichung', 'Tainan', 'Taoyuan']
-scripts = ["[23.633319, 120.883727], 8", "[25.082, 121.566], 11", "[24.205, 120.670], 10", "[22.733796, 120.693579], 9", "[24.950, 121.255], 11"]
-imgSavingPath = "/Users/huanglipang/Documents/github/iis_sinica/idw_gif/img/"
-localWebserverURL = "http://127.0.0.1:3000/"
+areas = config.SNAPSHOT_CONFIG["areas"]
+location_zoomSize = config.SNAPSHOT_CONFIG["location_zoomSize"]
+imgSavingPath = config.SNAPSHOT_CONFIG["imgSavingPath"]
+localWebserverURL = config.SNAPSHOT_CONFIG["localWebserverURL"]
 # URL = "http://data.lass-net.org/GIS/IDW/"
-chromeDriverPath = "/Users/huanglipang/node_modules/chromedriver/bin/chromedriver"
+chromeDriverPath = config.SNAPSHOT_CONFIG["chromeDriverPath"]
 # ------------------------------ parameters & settings
 
 # chrome options
@@ -33,11 +38,11 @@ driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chromeD
 driver.get(localWebserverURL + "index.html")
 print("connect to %s" % localWebserverURL)
 
-for i in xrange(5):
+for i in len(areas):
 	timestamp = datetime.datetime.now()
 	# change timezone to Asia/Taipei
 	timestamp = timestamp.strftime("%Y-%m-%d %H:%M")
-	driver.execute_script("map.setView(%s);" % scripts[i])
+	driver.execute_script("map.setView(%s);" % location_zoomSize[i])
 	time.sleep(10)
 	driver.get_screenshot_as_file("%(imgSavingPath)s%(areas)s/%(areas)s %(timestamp)s.png" % \
 		({"imgSavingPath": imgSavingPath, "areas": areas[i], "timestamp": timestamp}))
