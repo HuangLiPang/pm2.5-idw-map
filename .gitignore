@@ -5,7 +5,10 @@
 *.json
 *.geojson
 *.log
+*.png
+*.gif
 
 # config data
 .env
 .python-version
+config.*
