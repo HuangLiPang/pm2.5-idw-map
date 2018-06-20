@@ -4,7 +4,11 @@
 # demo data
 *.json
 *.geojson
-log
+*.log
+*.png
+*.gif
 
 # config data
 .env
+.python-version
+config.*

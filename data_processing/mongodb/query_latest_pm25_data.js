@@ -1,9 +1,15 @@
 "use strict";
+/*
+ * versions:
+ *  nodejs:   9.8.0
+ *  mongodb:  3.0.8
+ *  dotenv:   6.0.0
+ */
 const fs = require("fs");
 const MongoClient = require("mongodb").MongoClient;
 // loading config variable from .env
 // executed by crontab, we need to add .env path
-const dotenvPath = "";
+const dotenvPath = __dirname + "/.env";
 const dotenv = require('dotenv').config({path: dotenvPath});
 
 // Connection URL
@@ -121,6 +127,7 @@ MongoClient.connect(dbUrl)
       .catch(error => {
         console.log(`[Collection Error]: at ${now}`);
         console.log(error.message);
+        client.close();
       });
   })
   .catch(error => {
