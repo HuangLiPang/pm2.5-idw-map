@@ -13,3 +13,4 @@
 .env
 .python-version
 config.*
+.pyc
