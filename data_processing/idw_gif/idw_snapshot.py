@@ -23,7 +23,7 @@ from datetime import timedelta
 # config file contains file saving path and web url
 import config
 # logging config
-import logging_conf
+import logging_config
 # parameters & settings ------------------------------
 areas = config.SNAPSHOT_CONFIG["areas"]
 location_zoomSize = config.SNAPSHOT_CONFIG["location_zoomSize"]
@@ -34,7 +34,7 @@ chromeDriverPath = config.SNAPSHOT_CONFIG["chromeDriverPath"]
 # ------------------------------ parameters & settings
 
 # create logger
-logging.config.dictConfig(logging_conf.LOGGING)
+logging.config.dictConfig(logging_config.LOGGING)
 logger = logging.getLogger("idw_snapshot")
 
 # test if the web site is nornal

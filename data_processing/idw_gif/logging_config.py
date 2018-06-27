@@ -1,6 +1,7 @@
 import logging
 import datetime
 import time
+import config
 
 class UTCFormatter(logging.Formatter):
     converter = time.gmtime
@@ -30,7 +31,7 @@ LOGGING = {
             "level": "INFO",
             "formatter": "complete",
             "class": "logging.FileHandler",
-            "filename": "./log/" + datetime.datetime.now().strftime("%Y-%m-%d.log"),
+            "filename": config.DIR + "data_processing/idw_gif/log/" + datetime.datetime.now().strftime("%Y-%m-%d.log"),
         }
     },
     "root": {
