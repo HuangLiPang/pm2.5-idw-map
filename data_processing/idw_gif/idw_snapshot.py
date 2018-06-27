@@ -15,13 +15,15 @@ from selenium.webdriver.chrome.options import Options
 # check web status
 import urllib2
 import sys
-
+import logging
+import logging.config
 import time
 import datetime
 from datetime import timedelta
 # config file contains file saving path and web url
 import config
-
+# logging config
+import logging_conf
 # parameters & settings ------------------------------
 areas = config.SNAPSHOT_CONFIG["areas"]
 location_zoomSize = config.SNAPSHOT_CONFIG["location_zoomSize"]
@@ -31,11 +33,17 @@ localWebserverURL = config.SNAPSHOT_CONFIG["localWebserverURL"]
 chromeDriverPath = config.SNAPSHOT_CONFIG["chromeDriverPath"]
 # ------------------------------ parameters & settings
 
+# create logger
+logging.config.dictConfig(logging_conf.LOGGING)
+logger = logging.getLogger("idw_snapshot")
+
 # test if the web site is nornal
 try:
   checkWebStatus = urllib2.urlopen(localWebserverURL)
+  logger.info("[%s] status: %s" % (localWebserverURL, checkWebStatus.getcode()))
 except Exception as err:
-  sys.exit(err)
+  logger.error(err)
+  sys.exit()
 
 # chrome options
 chrome_options = Options()
@@ -46,7 +54,7 @@ chrome_options.add_argument("--window-size=1024x700")
 # loading chrome driver
 driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chromeDriverPath)
 driver.get(localWebserverURL)
-print("Successfully connect to %s" % localWebserverURL)
+logger.info("Successfully connect to %s" % localWebserverURL)
 
 for i in range(len(areas)):
   timestamp = datetime.datetime.now()
@@ -56,14 +64,14 @@ for i in range(len(areas)):
   # test if script execution is success or not
   try:
     driver.execute_script("map.setView(%s);" % location_zoomSize[i])
+    time.sleep(10)
+    if driver.get_screenshot_as_file("%(imgSavingPath)s%(areas)s/%(areas)s %(timestamp)s.png" % \
+      ({"imgSavingPath": imgSavingPath, "areas": areas[i], "timestamp": timestamp})) is True:
+      logger.info("%s png saved" % areas[i])
   except Exception as err:
-    print("Saving %s error at %s." % (areas[i], timestamp))
-    print(err)
+    logger.error("Saving %s error." % areas[i])
+    logger.error(err)
     continue
-  time.sleep(10)
-  driver.get_screenshot_as_file("%(imgSavingPath)s%(areas)s/%(areas)s %(timestamp)s.png" % \
-    ({"imgSavingPath": imgSavingPath, "areas": areas[i], "timestamp": timestamp}))
-  print("%s png saved at %s" % (areas[i], timestamp))
 
 # close current window
 driver.close()

@@ -12,4 +12,5 @@ log
 # config data
 .env
 .python-version
-config.*
+*config.*
+
