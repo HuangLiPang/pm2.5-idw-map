@@ -13,4 +13,4 @@ log
 .env
 .python-version
 config.*
-.pyc
+*.pyc

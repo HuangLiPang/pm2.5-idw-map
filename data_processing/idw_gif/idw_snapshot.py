@@ -2,10 +2,10 @@
 """
 Taking snapshot from pm2.5 idw map to making gif
 
-versions
-  python:       2.7.14
-  selenium:     3.4.3
-  chromedriver: 2.38.3
+Dependencies:
+  python        2.7.14
+  selenium      3.4.3
+  chromedriver  2.38.3
 """
 
 # selenium screenshot doc: 
@@ -71,7 +71,6 @@ for i in range(len(areas)):
   except Exception as err:
     logger.error("Saving %s error." % areas[i])
     logger.error(err)
-    continue
 
 # close current window
 driver.close()
