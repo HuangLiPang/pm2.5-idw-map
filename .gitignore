@@ -5,3 +5,11 @@
 *.json
 *.geojson
 log
+*.log
+
+# config file
+.python-version
+config.*
+
+# cache
+__pycache__
