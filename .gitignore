@@ -8,9 +8,13 @@
 *.png
 *.gif
 *.out
+log
 
 # config data
 .env
 .python-version
 config.*
-.pyc
+*.pyc
+
+# cache
+__pycache__
