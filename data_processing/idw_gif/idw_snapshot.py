@@ -2,10 +2,10 @@
 """
 Taking snapshot from pm2.5 idw map to making gif
 
-versions
-  python:       2.7.14
-  selenium:     3.4.3
-  chromedriver: 2.38.3
+Dependencies:
+  python        2.7.14
+  selenium      3.4.3
+  chromedriver  2.38.3
 """
 
 # selenium screenshot doc: 
@@ -23,7 +23,7 @@ from datetime import timedelta
 # config file contains file saving path and web url
 import config
 # logging config
-import logging_conf
+import logging_config
 # parameters & settings ------------------------------
 areas = config.SNAPSHOT_CONFIG["areas"]
 location_zoomSize = config.SNAPSHOT_CONFIG["location_zoomSize"]
@@ -34,7 +34,7 @@ chromeDriverPath = config.SNAPSHOT_CONFIG["chromeDriverPath"]
 # ------------------------------ parameters & settings
 
 # create logger
-logging.config.dictConfig(logging_conf.LOGGING)
+logging.config.dictConfig(logging_config.LOGGING)
 logger = logging.getLogger("idw_snapshot")
 
 # test if the web site is nornal
@@ -71,7 +71,6 @@ for i in range(len(areas)):
   except Exception as err:
     logger.error("Saving %s error." % areas[i])
     logger.error(err)
-    continue
 
 # close current window
 driver.close()
