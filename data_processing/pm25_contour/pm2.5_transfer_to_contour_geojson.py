@@ -221,7 +221,7 @@ for interval in contourIntervals:
   contour_grey = ax.contour(lonRange, latRange, pm25Value,\
     levels = contourIntervals[interval],\
     cmap = None,\
-    colors = "#595959"\
+    colors = "black"\
   )
   ##
   ### Convert matplotlib contour to geojson ###

@@ -19,8 +19,8 @@
   }).setView([23.77, 120.88], 8);
 
   var Stamen_Terrain = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
-    attribution: `Tiles by <a href="http://stamen.com">Stamen Design</a>, ` +
-      `&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>`,
+    attribution: `Tiles by <a target="_blank" rel="noopener noreferrer" href="http://stamen.com">Stamen Design</a>, ` +
+      `&copy; <a target="_blank" rel="noopener noreferrer" href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>`,
     minZoom: 0,
     maxZoom: 16,
     ext: 'png'
@@ -123,9 +123,8 @@
     });
 
   // credits
-  creditsTemplate = `<a href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a>`;
+  creditsTemplate = `<a target="_blank" rel="noopener noreferrer" href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a>`;
   // Credits not used
-  // © <a href='http://lass-net.org'>LASS</a> & 
   // <a href='https://sites.google.com/site/cclljj/NRL'>IIS-NRL</a>
 
   // add credits to map

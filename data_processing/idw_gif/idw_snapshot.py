@@ -15,15 +15,16 @@ from selenium.webdriver.chrome.options import Options
 # check web status
 import urllib2
 import sys
-import logging
-import logging.config
 import time
 import datetime
 from datetime import timedelta
 # config file contains file saving path and web url
 import config
 # logging config
+import logging
+import logging.config
 import logging_config
+from logging_config import RotatingFileNameHandler
 # parameters & settings ------------------------------
 areas = config.SNAPSHOT_CONFIG["areas"]
 location_zoomSize = config.SNAPSHOT_CONFIG["location_zoomSize"]
@@ -33,9 +34,13 @@ localWebserverURL = config.SNAPSHOT_CONFIG["localWebserverURL"]
 chromeDriverPath = config.SNAPSHOT_CONFIG["chromeDriverPath"]
 # ------------------------------ parameters & settings
 
-# create logger
+# load config file
 logging.config.dictConfig(logging_config.LOGGING)
-logger = logging.getLogger("idw_snapshot")
+
+# create logger
+logger = logging.getLogger()
+# RotatingFileNameHandler(filename, logPath)
+logger.addHandler(RotatingFileNameHandler(__file__, config.DIR + "data_processing/idw_gif/log/"))
 
 # test if the web site is nornal
 try:
