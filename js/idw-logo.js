@@ -6,8 +6,11 @@ L.Control.IDWLogo = L.Control.extend({
   },
   onAdd: function(map) {
     let date = new Date(this.options['latest-updated-time']),
-      timezone = date.toString().split(/\s/)[6],
-      latestUpdatedTime = date.toLocaleString("en-us", { hour12: false }) + " " + timezone;
+      latestUpdatedTime = date.toLocaleString("zh-TW", {
+        hour12: false, 
+        timeZone: "Asia/Taipei", 
+        timeZoneName: "long"
+      });
 
     let div = L.DomUtil.create('div', 'logo');
     div.innerHTML = 

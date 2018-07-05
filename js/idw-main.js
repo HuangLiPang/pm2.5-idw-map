@@ -1,6 +1,3 @@
-// mapbox access token
-// L.mapbox.accessToken = 'pk.eyJ1IjoibXltYWt0dWIiLCJ' + 
-//   'hIjoiY2oyNXBwdXVxMDB0YTMybzdkdzl5cjRodSJ9.803z0kHzvQVFMstwjfjCqg';
 (function(window) {
   let map;
   let IDWOptions;
@@ -8,21 +5,40 @@
   let logoContainer;
   let overlays;
   let OpenStreetMap_Mapnik;
+  let contourIntervals = [2, 5, 10];
+  let urls = [
+    './data/data.json',
+    './data/emission_points_polygons.geojson', 
+    `./data/pm25Contour_grey_5.geojson`,
+    `./data/pm25Contour_grey_10.geojson`, 
+  ];
 
-  map = L.map('map', {
+  map = L.map("map", {
     attributionControl: false,
     maxZoom: 16
   }).setView([23.77, 120.88], 8);
 
-  OpenStreetMap_Mapnik = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  var Stamen_Terrain = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+    attribution: `Tiles by <a href="http://stamen.com">Stamen Design</a>, ` +
+      `&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>`,
+    minZoom: 0,
     maxZoom: 16,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    ext: 'png'
   }).addTo(map);
-  // loading pm2.5 points and update time
-  makeRequest('GET', './data/pm25.json')
-    .then(function(response) {
-      let pm25json = JSON.parse(response);
-      let pm25points = pm25json.points;
+
+  Promise.all(urls.map(url => makeRequest('GET', url)))
+    .then(texts => {
+      // parse all texts to json objects
+      return texts.map(txt => JSON.parse(txt));
+    })
+    .then(jsons => {
+      // jsons = [
+      //    data.json, 
+      //    emission_points_polygons.geojson,
+      //    pm25Contour_grey_5.geojson,
+      //    pm25Contour_grey_10.geojson
+      //  ];
+      let pm25points = jsons[0].points;
       // IDW layer options
       IDWOptions = {
         // opacity  - the opacity of the IDW layer
@@ -45,33 +61,62 @@
         // IDW layer
         "IDW Diagram": L.idwLayer(pm25points, IDWOptions).addTo(map),
 
+        // L.geoJson doc:
+        // https://leafletjs.com/reference-0.7.7.html#geojson
         // emission pointe layer
-        "Emission Points": L.mapbox.featureLayer()
-          .loadURL('./data/emission_points_polygons.geojson').addTo(map)
+        "Emission Points": L.geoJson(jsons[1], {
+          style: function (feature) {
+            return {
+              "color": feature.properties.stroke,
+              "weight": 2,
+              "fillOpacity": feature.properties["fill-opacity"],
+              "fill": true,
+              "fillColor": feature.properties["fill"]
+            };
+          },
+          onEachFeature: function (feature, layer) {
+            layer.bindPopup(feature.properties.title);
+          }
+        }).addTo(map),
+
+        // contour layers
+        "Contour Interval: 5": L.geoJson(jsons[2], {
+          style: function (feature) {
+            return {
+              // style option doc:
+              // https://leafletjs.com/reference-1.3.0.html#path
+              "color": feature.properties.stroke,
+              "weight": feature.properties["stroke-width"],
+            };
+          },
+          onEachFeature: function (feature, layer) {
+            layer.bindPopup(feature.properties.title);
+          }
+        }),
+        "Contour Interval: 10": L.geoJson(jsons[3], {
+          style: function (feature) {
+            return {
+              "color": feature.properties.stroke,
+              "weight": feature.properties["stroke-width"]
+            };
+          },
+          onEachFeature: function (feature, layer) {
+            layer.bindPopup(feature.properties.title);
+          }
+        }).addTo(map),
       };
 
-      // add contour layers to overlays
-      let contourIntervals = [2, 5, 10];
-      for (interval in contourIntervals) {
-        let contourPath = `./data/pm25Contour_grey_` +
-          `${contourIntervals[interval]}.geojson`;
-        overlays[`Contour Interval: ${contourIntervals[interval]}`] = L.mapbox.featureLayer()
-          .loadURL(contourPath);
-      }
-
+      // add logo container to map
       logoContainer = L.control.IDWLogo({
         position: 'bottomleft',
-        "latest-updated-time": pm25json['latest-updated-time']
+        "latest-updated-time": jsons[0]['latest-updated-time']
       }).addTo(map);
 
-      // layer controller
+      // add layer controller to map
       L.control.layers({}, overlays, {
         collapsed: false,
         autoZIndex: true
       }).addTo(map);
-
-      // add contour layer to map
-      overlays["Contour Interval: 10"].addTo(map);
     })
     .catch(function(error) {
       console.log(error);
@@ -80,8 +125,6 @@
   // credits
   creditsTemplate = `<a href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a>`;
   // Credits not used
-  // © <a href='https://www.mapbox.com/map-feedback/'>Mapbox</a>
-  // © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>
   // © <a href='http://lass-net.org'>LASS</a> & 
   // <a href='https://sites.google.com/site/cclljj/NRL'>IIS-NRL</a>
 
@@ -93,7 +136,7 @@
   L.control.IDWLegend({ position: 'bottomright' }).addTo(map);
 
   // make request function in promise
-  // for loading pm2.5 points
+  // for loading json and geojson
   function makeRequest(method, url) {
     return new Promise(function(resolve, reject) {
       let xhr = new XMLHttpRequest();
@@ -117,7 +160,6 @@
       xhr.send();
     });
   }
-
   // make variable map a global variable
   window.map = map;
 })(this);

@@ -40,7 +40,7 @@ precise = config.CONTOUR["PRECISE"]
 logPrecise = int(log(precise, 10)) + 1
 grid_size = 1.0 / precise
 # effective range in KM
-effectiveRange = config.CONTOUR["EFFECT_RANGE"]
+effectiveRange = config.CONTOUR["EFFECTIVE_RANGE"]
 # exponential factor for calculating idw value
 expFactor = config.CONTOUR["EXP_FACTOR"]
 # ------------------------------ parameters & settings
@@ -221,7 +221,7 @@ for interval in contourIntervals:
   contour_grey = ax.contour(lonRange, latRange, pm25Value,\
     levels = contourIntervals[interval],\
     cmap = None,\
-    colors = "grey"\
+    colors = "#595959"\
   )
   ##
   ### Convert matplotlib contour to geojson ###
