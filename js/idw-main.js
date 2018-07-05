@@ -7,10 +7,10 @@
   let OpenStreetMap_Mapnik;
   let contourIntervals = [2, 5, 10];
   let urls = [
-    './data/data.json',
-    './data/emission_points_polygons.geojson', 
-    `./data/pm25Contour_grey_5.geojson`,
-    `./data/pm25Contour_grey_10.geojson`, 
+    "data/data.json",
+    "data/emission_points_polygons.geojson", 
+    "data/pm25Contour_grey_5.geojson",
+    "data/pm25Contour_grey_10.geojson", 
   ];
 
   map = L.map("map", {
