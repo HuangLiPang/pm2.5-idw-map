@@ -29,7 +29,7 @@ L.Control.IDWLogo = L.Control.extend({
               <img src='./images/LASS-logo.png' alt='Location Aware Sensing System (LASS)' height=40>
             </a>
             <a target="_blank" rel="noopener noreferrer" style="text-decoration: none" href='https://github.com/HuangLiPang/pm2.5-idw-with-weather'>
-              <img src="./images/GitHub-logo.png" alt='GitHub' height=40>
+              <img src="./images/GHRepo-logo.png" alt='GitHub' height=40>
             </a>
             <br>
             <font size='+1' color='#000000'>${latestUpdatedTime}</font>
