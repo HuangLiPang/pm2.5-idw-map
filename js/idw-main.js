@@ -1,11 +1,9 @@
 (function(window) {
   let map;
   let IDWOptions;
-  let creditsTemplate;
   let logoContainer;
   let overlays;
-  let OpenStreetMap_Mapnik;
-  let contourIntervals = [2, 5, 10];
+  let Stamen_Terrain;
   let urls = [
     "data/data.json",
     "data/emission_points_polygons.geojson", 
@@ -19,7 +17,7 @@
     maxZoom: 16
   }).setView([23.77, 120.88], 8);
 
-  var Stamen_Terrain = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+  Stamen_Terrain = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
     attribution: `<a target="_blank" rel="noopener noreferrer" href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a>|` + 
       `Tiles by <a target="_blank" rel="noopener noreferrer" href="http://stamen.com">Stamen Design</a>, ` +
       `&copy; <a target="_blank" rel="noopener noreferrer" href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>`,
@@ -107,7 +105,7 @@
           onEachFeature: function (feature, layer) {
             layer.bindPopup(feature.properties.title);
           }
-        }),
+        }).addTo(map),
         "Wind": L.velocityLayer({
           displayValues: true,
           displayOptions: {
@@ -121,14 +119,16 @@
                        "rgb(192, 192, 192)"] 
         }).addTo(map)
       };
-      // overlays.Wind.addTo(map); 
+
       // add logo container to map
       logoContainer = L.control.IDWLogo({
         position: 'bottomright',
         "latest-updated-time": jsons[0]['latest-updated-time']
       }).addTo(map);
-// add IDW legend to the map
-  L.control.IDWLegend({ position: 'bottomright' }).addTo(map);
+
+      // add IDW legend to the map
+      L.control.IDWLegend({ position: 'bottomright' }).addTo(map);
+
       // add layer controller to map
       L.control.layers({}, overlays, {
         collapsed: false,
@@ -138,8 +138,6 @@
     .catch(function(error) {
       console.log(error);
     });
-
-  
 
   // make request function in promise
   // for loading json and geojson
