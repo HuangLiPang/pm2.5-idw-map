@@ -1,26 +1,28 @@
 (function(window) {
   let map;
   let IDWOptions;
-  let creditsTemplate;
   let logoContainer;
   let overlays;
-  let OpenStreetMap_Mapnik;
-  let contourIntervals = [2, 5, 10];
+  let Stamen_Terrain;
   let urls = [
-    "./data/data.json",
-    "./data/emission_points_polygons.geojson", 
-    "./data/pm25Contour_grey_5.geojson",
-    "./data/pm25Contour_grey_10.geojson", 
+    "data/data.json",
+    "data/emission_points_polygons.geojson", 
+    "data/pm25Contour_grey_5.geojson",
+    "data/pm25Contour_grey_10.geojson", 
+    "data/gfs.json"
   ];
 
   map = L.map("map", {
-    attributionControl: false,
+    attributionControl: true,
     maxZoom: 16
   }).setView([23.77, 120.88], 8);
 
-  var Stamen_Terrain = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
-    attribution: `Tiles by <a target="_blank" rel="noopener noreferrer" href="http://stamen.com">Stamen Design</a>, ` +
+  Stamen_Terrain = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+    attribution: `<a target="_blank" rel="noopener noreferrer" href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a>|` + 
+      `Tiles by <a target="_blank" rel="noopener noreferrer" href="http://stamen.com">Stamen Design</a>, ` +
       `&copy; <a target="_blank" rel="noopener noreferrer" href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>`,
+      // Credits not used
+      // <a href='https://sites.google.com/site/cclljj/NRL'>IIS-NRL</a>
     minZoom: 0,
     maxZoom: 16,
     ext: 'png'
@@ -104,13 +106,28 @@
             layer.bindPopup(feature.properties.title);
           }
         }).addTo(map),
+        "Wind": L.velocityLayer({
+          displayValues: true,
+          displayOptions: {
+            velocityType: 'Global Wind',
+            displayPosition: 'bottomright',
+            displayEmptyString: 'No wind data'
+          },
+          data: jsons[4],
+          maxVelocity: 15,
+          colorScale: ["rgb(0, 0, 0)", "rgb(105, 105, 105)", "rgb(128, 128, 128)", "rgb(169, 169, 169)", 
+                       "rgb(192, 192, 192)"] 
+        }).addTo(map)
       };
 
       // add logo container to map
       logoContainer = L.control.IDWLogo({
-        position: 'bottomleft',
+        position: 'bottomright',
         "latest-updated-time": jsons[0]['latest-updated-time']
       }).addTo(map);
+
+      // add IDW legend to the map
+      L.control.IDWLegend({ position: 'bottomright' }).addTo(map);
 
       // add layer controller to map
       L.control.layers({}, overlays, {
@@ -121,18 +138,6 @@
     .catch(function(error) {
       console.log(error);
     });
-
-  // credits
-  creditsTemplate = `<a target="_blank" rel="noopener noreferrer" href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a>`;
-  // Credits not used
-  // <a href='https://sites.google.com/site/cclljj/NRL'>IIS-NRL</a>
-
-  // add credits to map
-  L.control.attribution()
-    .addAttribution(creditsTemplate).addTo(map);
-
-  // add IDW legend to the map
-  L.control.IDWLegend({ position: 'bottomright' }).addTo(map);
 
   // make request function in promise
   // for loading json and geojson
