@@ -4,7 +4,9 @@
 Created on 2018 Apr.
 
 @author: huanglipang
-
+Discription:
+  converting pm2.5 data to contour geojosn using IDW
+  
 Dependencies:
   python          3.6.4
   numpy           1.14.0
@@ -28,22 +30,40 @@ import logging_config
 from logging_config import RotatingFileNameHandler
 
 # parameters & settings ------------------------------
+# all path are absolute path
 DIR = config.DIR
 DATA_PATH = config.CONTOUR["DATA_PATH"]
+LOG_PATH = config.CONTOUR["LOG_PATH"]
 # lat lon boundary
-boundaries = config.CONTOUR["BOUNDARY"]
+BOUNDARY = config.CONTOUR["BOUNDARY"]
+"""
+BOUNDARY = {
+  "lat": {"min": 21.0, "max": 26.0},
+  "lon": {"min": 119.0, "max": 123.0}
+}
+"""
+
+# PRIECISE of how many division in lenth, e.g. 10, 100, 1000 etc.
+PRECISE = config.CONTOUR["PRECISE"]
+LOG_PRECISE = int(log(PRECISE, 10)) + 1
+
 # grid size
-# a cell is about 
-# 1 degree lon = 111.320 km
-# 1 degree lat = 110.574 km
-precise = config.CONTOUR["PRECISE"]
-logPrecise = int(log(precise, 10)) + 1
-grid_size = 1.0 / precise
+# a cell of 1 lat * 1 lon
+# length of 1 degree lon = 111.320 km
+# length of 1 degree lat = 110.574 km
+GRID_SIZE = 1.0 / PRECISE
 # effective range in KM
-effectiveRange = config.CONTOUR["EFFECTIVE_RANGE"]
+EFFECTIVE_RANGE = config.CONTOUR["EFFECTIVE_RANGE"]
 # exponential factor for calculating idw value
-expFactor = config.CONTOUR["EXP_FACTOR"]
+EXP_FACTOR = config.CONTOUR["EXP_FACTOR"]
 # ------------------------------ parameters & settings
+
+# Inverse Distance Weighting (IDW)
+#       Σ (1 / (di ^ p)) * vi
+# V = -------------------------
+#          Σ (1 / (di ^ p))
+# Reference:
+# http://www.gitta.info/ContiSpatVar/de/html/Interpolatio_learningObject2.xhtml
 
 # load config file
 logging.config.dictConfig(logging_config.LOGGING)
@@ -51,15 +71,12 @@ logging.config.dictConfig(logging_config.LOGGING)
 # create logger
 logger = logging.getLogger()
 # RotatingFileNameHandler(filename, logPath)
-logger.addHandler(RotatingFileNameHandler(__file__, "./log"))
+logger.addHandler(RotatingFileNameHandler(__file__, LOG_PATH))
 
 start = time.time()
-logger.info("pm 2.5 contour start")
+logger.info("pm2.5 data to contour geojson conversion starts")
 
-##
-### Create lat and lon vectors and grid data ###
-##
-
+### Create lat and lon vectors and grid data
 try:
   # loading data points [lat, lon, value]
   data = json.load(open(DATA_PATH), parse_float = float)
@@ -69,22 +86,16 @@ except Exception as err:
 
 # numpy.arange(start, stop, step)
 # numpy.arange(3, 7, 2) > [3, 5]
-lonRange = numpy.arange(boundaries["lon"]["min"],\
-                        boundaries["lon"]["max"], grid_size)
-latRange = numpy.arange(boundaries["lat"]["min"],\
-                        boundaries["lat"]["max"], grid_size)
+lonRange = numpy.arange(BOUNDARY["lon"]["min"],\
+                        BOUNDARY["lon"]["max"], GRID_SIZE)
+latRange = numpy.arange(BOUNDARY["lat"]["min"],\
+                        BOUNDARY["lat"]["max"], GRID_SIZE)
 
-# Inverse Distance Weighting (IDW)
-#       Σ (1 / (di ^ p)) * vi
-# V = -------------------------
-#          Σ (1 / (di ^ p))
-# Reference:
-# http://www.gitta.info/ContiSpatVar/de/html/Interpolatio_learningObject2.xhtml
-latDiff = int(boundaries["lat"]["max"] - boundaries["lat"]["min"])
-lonDiff = int(boundaries["lon"]["max"] - boundaries["lon"]["min"])
+latDiff = int(BOUNDARY["lat"]["max"] - BOUNDARY["lat"]["min"])
+lonDiff = int(BOUNDARY["lon"]["max"] - BOUNDARY["lon"]["min"])
 
-lonCellLength = lonDiff * precise
-latCellLength = latDiff * precise
+lonCellLength = lonDiff * PRECISE
+latCellLength = latDiff * PRECISE
 
 # numpy.zeros returns a new array of given shape and type, filled with zeros.
 # cell[lat][lon]
@@ -98,32 +109,32 @@ cellSD = numpy.zeros((latCellLength, lonCellLength),\
 pm25Value = numpy.zeros((latCellLength, lonCellLength),\
                      dtype=float, order='C')
 temp = time.time()
-logger.info("idw calculation start: %f" % (temp - start))
+logger.info("idw calculation starts: %f" % (temp - start))
 
 for point in data["points"]:
   # point[lat][lon][value]
   # point is the center of the cell
-  lat = round(point[0], logPrecise)
-  lon = round(point[1], logPrecise)
+  lat = round(point[0], LOG_PRECISE)
+  lon = round(point[1], LOG_PRECISE)
   value = float(point[2])
   
-  if(lat >= boundaries["lat"]["min"] and lat < boundaries["lat"]["max"] and \
-     lon >= boundaries["lon"]["min"] and lon < boundaries["lon"]["max"]):
+  if(lat >= BOUNDARY["lat"]["min"] and lat < BOUNDARY["lat"]["max"] and \
+     lon >= BOUNDARY["lon"]["min"] and lon < BOUNDARY["lon"]["max"]):
     
     # calculate boundary coordinate in cellSN and cellSD
     # boundary of cell in lat lon
-    x1 = lon - effectiveRange / 111.320
-    x2 = lon + effectiveRange / 111.320
-    y1 = lat - effectiveRange / 110.574
-    y2 = lat + effectiveRange / 110.574
+    x1 = lon - EFFECTIVE_RANGE / 111.320
+    x2 = lon + EFFECTIVE_RANGE / 111.320
+    y1 = lat - EFFECTIVE_RANGE / 110.574
+    y2 = lat + EFFECTIVE_RANGE / 110.574
     
     # boundary of cell in cellSN cellSD index
-    x1 = int(round(x1 - boundaries["lon"]["min"], logPrecise) * precise)
-    x2 = int(round(x2 - boundaries["lon"]["min"], logPrecise) * precise)
-    y1 = int(round(y1 - boundaries["lat"]["min"], logPrecise) * precise)
-    y2 = int(round(y2 - boundaries["lat"]["min"], logPrecise) * precise)
+    x1 = int(round(x1 - BOUNDARY["lon"]["min"], LOG_PRECISE) * PRECISE)
+    x2 = int(round(x2 - BOUNDARY["lon"]["min"], LOG_PRECISE) * PRECISE)
+    y1 = int(round(y1 - BOUNDARY["lat"]["min"], LOG_PRECISE) * PRECISE)
+    y2 = int(round(y2 - BOUNDARY["lat"]["min"], LOG_PRECISE) * PRECISE)
     
-    # check x1, x2, y1, y2 in the index boundaries
+    # check x1, x2, y1, y2 in the index boundary
     if(x2 < 0):
       continue
     if(x1 >= lonCellLength):
@@ -136,15 +147,15 @@ for point in data["points"]:
     if(x1 < 0):
       x1 = 0
     if(x2 >= lonCellLength):
-      x2 = lonDiff * precise - 1
+      x2 = lonDiff * PRECISE - 1
     if(y1 < 0):
       y1 = 0
     if(y2 >= latCellLength):
-      y2 = latDiff * precise - 1
+      y2 = latDiff * PRECISE - 1
     
     # transfer lat lon into index
-    lat = int((lat - boundaries["lat"]["min"]) * precise)
-    lon = int((lon - boundaries["lon"]["min"]) * precise)
+    lat = int((lat - BOUNDARY["lat"]["min"]) * PRECISE)
+    lon = int((lon - BOUNDARY["lon"]["min"]) * PRECISE)
     # set cell center values
     cellSN[lat][lon] = value
     cellSD[lat][lon] = -1
@@ -161,18 +172,18 @@ for point in data["points"]:
           continue
         
         # calculate distance
-        distance = sqrt(pow(((x - lon) / precise * 111.320), 2) +\
-                        pow(((y - lat) / precise * 110.574), 2))
-        if(distance > effectiveRange):
+        distance = sqrt(pow(((x - lon) / PRECISE * 111.320), 2) +\
+                        pow(((y - lat) / PRECISE * 110.574), 2))
+        if(distance > EFFECTIVE_RANGE):
           continue
         
         if distance > 0:
-          distanceExp = pow(distance, expFactor)
+          distanceExp = pow(distance, EXP_FACTOR)
           cellSN[y][x] += value / distanceExp
           cellSD[y][x] += 1 / distanceExp
 
 temp = time.time()
-logger.info("idw calculation complete: %f" % (temp - start))
+logger.info("idw calculation completes: %f" % (temp - start))
     
 for y in range(0, latCellLength):
   for x in range(0, lonCellLength):
@@ -185,11 +196,9 @@ for y in range(0, latCellLength):
     # calculate pm2.5 value
     pm25Value[y][x] = interpolateValue
 temp = time.time()
-logger.info("pm2.5 value complete: %f" % (temp - start))
+logger.info("pm2.5 interpolation value calculation completes: %f" % (temp - start))
 
-##
 ### Create a contour plot from grid (lat, lon) data ###
-##
 
 # Create a new figure
 figure = plt.figure()
@@ -223,9 +232,8 @@ for interval in contourIntervals:
     cmap = None,\
     colors = "black"\
   )
-  ##
-  ### Convert matplotlib contour to geojson ###
-  ##
+
+  ### Convert matplotlib contour to geojson
   geojsoncontour.contour_to_geojson(
     contour = contour_grey,
     geojson_filepath = DIR + 'data/pm25Contour_grey_' + interval + '.geojson',
@@ -236,4 +244,4 @@ for interval in contourIntervals:
   )
 
 end = time.time()
-logger.info("geojson complete: %f" % (end - start))
+logger.info("pm2.5 contour geojson completes: %f" % (end - start))

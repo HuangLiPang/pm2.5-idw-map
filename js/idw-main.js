@@ -9,7 +9,7 @@
     "data/emission_points_polygons.geojson", 
     "data/pm25Contour_grey_5.geojson",
     "data/pm25Contour_grey_10.geojson", 
-    "data/gfs.json"
+    // "data/gfs.json"
   ];
 
   map = L.map("map", {
@@ -106,23 +106,23 @@
             layer.bindPopup(feature.properties.title);
           }
         }).addTo(map),
-        "Wind": L.velocityLayer({
-          displayValues: true,
-          displayOptions: {
-            velocityType: 'Global Wind',
-            displayPosition: 'bottomright',
-            displayEmptyString: 'No wind data'
-          },
-          data: jsons[4],
-          maxVelocity: 15,
-          colorScale: ["rgb(0, 0, 0)", "rgb(105, 105, 105)", "rgb(128, 128, 128)", "rgb(169, 169, 169)", 
-                       "rgb(192, 192, 192)"] 
-        }).addTo(map)
+        // "Wind": L.velocityLayer({
+        //   displayValues: true,
+        //   displayOptions: {
+        //     velocityType: 'Global Wind',
+        //     displayPosition: 'bottomright',
+        //     displayEmptyString: 'No wind data'
+        //   },
+        //   data: jsons[4],
+        //   maxVelocity: 15,
+        //   colorScale: ["rgb(0, 0, 0)", "rgb(105, 105, 105)", "rgb(128, 128, 128)", "rgb(169, 169, 169)", 
+        //                "rgb(192, 192, 192)"] 
+        // }).addTo(map)
       };
 
       // add logo container to map
       logoContainer = L.control.IDWLogo({
-        position: 'bottomright',
+        position: 'bottomleft',
         "latest-updated-time": jsons[0]['latest-updated-time']
       }).addTo(map);
 
