@@ -1,6 +1,6 @@
 # PM2.5-IDW-Map
 
-An PM2.5 Inverse Distance Weighting (IDW) map using [Leaflet](https://leafletjs.com/)(v0.7.7).
+An PM2.5 Inverse Distance Weighting (IDW) map using [Leaflet](https://leafletjs.com/) (v0.7.7).
 
 PM2.5 data source
 ---
