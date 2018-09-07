@@ -19,3 +19,6 @@ config.*
 
 # cache
 __pycache__
+
+# libraries
+data_processing/mongodb/node_modules/*

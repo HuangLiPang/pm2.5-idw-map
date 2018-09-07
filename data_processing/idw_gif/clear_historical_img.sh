@@ -1,5 +1,5 @@
 #!/bin/bash
-DIR=`pwd`
+DIR="/home/ubuntu/www/pm2.5-idw-with-weather/data_processing/idw_gif"
 CITIES=('Taiwan' 'Taipei' 'Taoyuan' 'Taichung' 'Tainan')
 
 # get the date

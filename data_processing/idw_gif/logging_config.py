@@ -42,7 +42,7 @@ class RotatingFileNameHandler(logging.handlers.RotatingFileHandler):
     # please set the maxBytes and backupCount by yourself
     # it will backup three files and delete the oldest one when create a new one
     # the latest log will always store in filename.log
-    super(RotatingFileNameHandler, self).__init__(filename=logPath, maxBytes=1024, backupCount=3)
+    super(RotatingFileNameHandler, self).__init__(filename=logPath, maxBytes=10485760, backupCount=10)
     super(RotatingFileNameHandler, self).setFormatter(fmt=formatter)
 
     # NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL

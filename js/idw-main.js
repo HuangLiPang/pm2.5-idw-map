@@ -14,6 +14,7 @@
 
   map = L.map("map", {
     attributionControl: true,
+    zoomControl: false,
     maxZoom: 16
   }).setView([23.77, 120.88], 8);
 
@@ -105,7 +106,7 @@
           onEachFeature: function (feature, layer) {
             layer.bindPopup(feature.properties.title);
           }
-        }).addTo(map),
+        }),
         // "Wind": L.velocityLayer({
         //   displayValues: true,
         //   displayOptions: {
@@ -133,7 +134,7 @@
       L.control.layers({}, overlays, {
         collapsed: false,
         autoZIndex: true
-      }).addTo(map);
+      });
     })
     .catch(function(error) {
       console.log(error);

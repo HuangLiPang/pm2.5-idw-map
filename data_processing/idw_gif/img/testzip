@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+echo `pwd` 
+cd "Taichung"
+echo`pwd`
+
+zip -A -i *2018-08-28* TaichungZipTest.zip
