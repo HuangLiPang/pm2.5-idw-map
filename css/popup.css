@@ -60,6 +60,9 @@
 .popup li {
   text-align: justify;
 }
+.popup ol {
+  margin-right: 25px;
+}
 .popup .close {
   position: absolute;
   top: 20px;
