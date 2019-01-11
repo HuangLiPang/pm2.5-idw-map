@@ -238,10 +238,10 @@
       // to make the emission point layer be the
       // most upper layer in the map
       overlayers = {
-        "Emission Points": emissionLayer.addTo(map),
+        "Emission Points": emissionLayer,
         // contour layers
-        "Contour Interval: 5": contourInterval5,
-        "Contour Interval: 10": contourInterval10.addTo(map),
+        "PM2.5 Contour Interval: 5": contourInterval5,
+        "PM2.5 Contour Interval: 10": contourInterval10,
       };
 
       // add logo container to map

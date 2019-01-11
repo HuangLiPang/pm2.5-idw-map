@@ -448,7 +448,8 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
           // if the value is less than 0.0,
           // the sensor is broken
           // set the value to default value
-          if(val < 0.0) val = defaultVal;
+          if(this.dataType === 2 && val < 0.0) val = defaultVal;
+          if(this.dataType === 3 && (val < -20.0 || val > 50.0)) val = defaultVal;
 
           if (distInPixels === 0.0) {
             // cell center fills in original value
