@@ -10,6 +10,8 @@ Website
 ---
 [PM2.5-IDW-Map](https://pm25.lass-net.org/GIS/IDW/)
 
+[Demo](https://huanglipang.ml/pm2.5-idw-map/)
+
 Inverse Distance Weighting (IDW)
 ---
 [Reference](http://www.gitta.info/ContiSpatVar/de/html/Interpolatio_learningObject2.xhtml)
