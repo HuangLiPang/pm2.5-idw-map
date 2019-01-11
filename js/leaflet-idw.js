@@ -18,7 +18,6 @@
     this._height = canvas.height;
 
     this._max = 1;
-    //this._max = 2;
     this._data = [];
   }
 
@@ -26,70 +25,39 @@
 
       defaultCellSize: 25,
 
-      defaultGradient: {
-        0.001: "#FFFFFF",
-        0.01: "#CCCCFF",
-        0.03: "#BBBBEE",
-        0.06: "#AAAADD",
-        0.08: "#9999CC",
-        0.10: "#8888BB",
+      Gradients: {
+        default: {
+          0.001: "#FFFFFF",
+          0.01: "#CCCCFF",
+          0.03: "#BBBBEE",
+          0.06: "#AAAADD",
+          0.08: "#9999CC",
+          0.10: "#8888BB",
 
-        0.12: "#90FA96",
-        0.14: "#82EA64",
-        0.16: "#66DA36",
-        0.18: "#50CA2C",
-        0.20: "#4ABA26",
-        // 0.25: "#3A781C",
+          0.12: "#90FA96",
+          0.14: "#82EA64",
+          0.16: "#66DA36",
+          0.18: "#50CA2C",
+          0.20: "#4ABA26",
 
-        0.25: "#FAFA5D",
-        0.30: "#EAEA46",
-        0.35: "#DADA4D",
-        0.40: "#CACA42",
-        0.50: "#BABA36",
+          0.25: "#FAFA5D",
+          0.30: "#EAEA46",
+          0.35: "#DADA4D",
+          0.40: "#CACA42",
+          0.50: "#BABA36",
 
-        0.6: "#FF7777",
-        0.7: "#EE6666",
-        0.8: "#DD5555",
-        0.9: "#CC4444",
-        1.0: "#BB3333",
-        //2.00:        "#701010",
+          0.6: "#FF7777",
+          0.7: "#EE6666",
+          0.8: "#DD5555",
+          0.9: "#CC4444",
+          1.0: "#BB3333",
 
-        //1.1: "#F04DF0",
-        1.1: "#E046E0",
-        //1.3: "#D042D0",
-        1.2: "#D03DD0",
-        //1.5: "#B036B0",
-        1.3: "#C032C0",
-        //1.7: "#902D90",
-        1.4: "#B026B0",
-        //1.9: "#702270",
-        1.5: "#A01DA0",
-        //          2.0: "#901690",
-
-        /*
-    0.00: "#ffffff",
-        0.11: "#9cff9c",
-        0.23: "#31ff00",
-        0.35: "#31cf00",
-        0.41: "#FFFF00",
-        0.47: "#FFCF00",
-        0.53: "#FF9A00",
-        0.58: "#FF6464",
-        0.64: "#FF0000",
-        0.70: "#990000",
-        1: "#CE30FF"
-  */
-        /*
-    0.00: "#ffffff",
-        0.0154: "#31CF00",
-        0.0354: "#FFFF00",
-        0.0544: "#FF9A00",
-        0.1504: "#FF0000",
-        0.2504: "#CE00CE",
-        0.3504: "#990000",
-        0.5004: "#990000",
-        1: "#990000"
-  */
+          1.1: "#E046E0",
+          1.2: "#D03DD0",
+          1.3: "#C032C0",
+          1.4: "#B026B0",
+          1.5: "#A01DA0"
+        }
       },
 
       data: function(data) {
@@ -154,9 +122,24 @@
         return this;
       },
 
-      draw: function(opacity) {
+      draw: function(opacity, dataType) {
         if (!this._cell) this.cellSize(this.defaultCellSize);
-        if (!this._grad) this.gradient(this.defaultGradient);
+        if (!this._grad) {
+          // dataType: 2 => pm2.5, 3 => temperature, 4 => humidity
+          switch(dataType) {
+            case 2:
+              this.gradient(this.Gradients["2"]);
+              break;
+            case 3:
+              this.gradient(this.Gradients["3"]);
+              break;
+            case 4:
+              this.gradient(this.Gradients["4"]);
+              break;
+            default:
+              this.gradient(this.Gradients.default);
+          }
+        }
 
         var ctx = this._ctx;
 
@@ -200,10 +183,13 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
   //        cellSize: 1,
   //        exp: 2,
   //        max: 2
-  //    },
+  //    }
 
-  initialize: function(latlngs, options) {
+  initialize: function(latlngs, dataType, gradient, options) {
     this._latlngs = latlngs;
+    // dataType: 2 => pm2.5, 3 => temperature, 4 => humidity
+    this.dataType = undefined ? 2 : dataType;
+    this.gradient = gradient;
     L.setOptions(this, options);
   },
 
@@ -445,13 +431,27 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
             continue;
           }
 
-          // pm2.5 value AQI
-          var val =
-            this._latlngs[k].alt !== undefined ? this._latlngs[k].alt :
-            this._latlngs[k][2] !== undefined ? +this._latlngs[k][2] : 1.0;
+          // IDW default value for Taiwan
+          // PM2.5 is 10.0
+          // Temperature is 20.0
+          // Hunidity is 70.0
+          var defaultVal = 0.0;
+          if(this.dataType === 2) defaultVal = 1.0;
+          else if(this.dataType === 3) defaultVal = 20.0;
+          else if(this.dataType === 4) defaultVal = 70.0;
+
+          // IDW value
+          var val = defaultVal;
+          if(this._latlngs[k].alt !== undefined) val = this._latlngs[k].alt;
+          else if(this._latlngs[k][this.dataType] !== undefined) val = +this._latlngs[k][this.dataType];
+
+          // if the value is less than 0.0,
+          // the sensor is broken
+          // set the value to default value
+          if(val < 0.0) val = defaultVal;
 
           if (distInPixels === 0.0) {
-            // cell center fills in original AQI value
+            // cell center fills in original value
             cellsn[i][j] = val;
             cellsd[i][j] = -1.0;
           } else {
@@ -490,7 +490,10 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
 
     console.timeEnd('process ' + this._latlngs.length);
     console.time('draw ' + data.length);
-    this._idw.data(data).draw(this.options.opacity);
+    // add gradient to simpleidw
+    simpleidw.prototype.Gradients[this.dataType] = this.gradient;
+    
+    this._idw.data(data).draw(this.options.opacity, this.dataType);
     console.timeEnd('draw ' + data.length);
     this._frame = null;
   },
@@ -508,6 +511,6 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
   }
 });
 
-L.idwLayer = function(latlngs, options) {
-  return new L.IdwLayer(latlngs, options);
+L.idwLayer = function(latlngs, dataType, gradient, options) {
+  return new L.IdwLayer(latlngs, dataType, gradient,options);
 };
