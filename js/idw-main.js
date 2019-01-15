@@ -124,7 +124,8 @@
       //    pm25Contour_grey_5.geojson,
       //    pm25Contour_grey_10.geojson
       //  ];
-      let pm25points = jsons[0].points;
+      // airboxPoints = [[lat, lng, pm2.5, temperature, humidity]]
+      let airboxPoints = jsons[0].points;
 
       let pm25IDWGradients = {
         0.001: "#FFFFFF",
@@ -170,8 +171,8 @@
         0.35: "#FF00FF"
       };
 
-      pm25IDWLayer = new L.idwLayer(pm25points, 2, pm25IDWGradients, IDWOptions),
-      tempIDWLayer = new L.idwLayer(pm25points, 3, tempIDWGradients, IDWOptions);
+      pm25IDWLayer = new L.idwLayer(airboxPoints, 2, pm25IDWGradients, IDWOptions),
+      tempIDWLayer = new L.idwLayer(airboxPoints, 3, tempIDWGradients, IDWOptions);
       baselayers = {
         // IDW layers
         "PM2.5 IDW Diagram": pm25IDWLayer.addTo(map),
@@ -266,6 +267,67 @@
           temperatureLegend.addTo(map);
         }
       });
+      map.on('click',
+        function mapClickListen(event) {
+          let pos = event.latlng;
+          let marker = new L.marker(
+            pos, {
+              draggable: true
+            });
+
+          marker.on('add dragend', function showIDW(event) {
+            // console.log('marker dragend event');
+            console.log(event.target._latlng);
+            let latlng = event.target._latlng;
+            let airboxInCell = airboxPoints.filter(point => {
+              let airboxCoordinate = new L.latLng(point[0], point[1]);
+              let distance = airboxCoordinate.distanceTo(latlng) / 1000.0;
+              return distance < 10.0;
+            })
+            console.log(airboxInCell);
+            // Inverse Distance Weighting (IDW)
+            //       Σ (1 / (di ^ p)) * vi
+            // V = -------------------------
+            //          Σ (1 / (di ^ p))
+            // Reference:
+            // http://www.gitta.info/ContiSpatVar/de/html/Interpolatio_learningObject2.xhtml
+            
+            // cellsn = Σ (1 / (di ^ p)) * vi
+            // cellsd = Σ (1 / (di ^ p))
+            let p = 2;
+            let pm25Cellsn = 0.0;
+            let pm25Cellsd = 0.0;
+            let temperatureCellsn = 0.0;
+            let temperatureCellsd = 0.0;
+            airboxInCell.forEach(airbox => {
+              // console.log(airbox);
+              let airboxCoordinate = new L.latLng(airbox[0], airbox[1]);
+              // console.log(airboxCoordinate);
+              let distance = airboxCoordinate.distanceTo(latlng) / 1000.0;
+              let distanceRev = 1 / (distance ^ p);
+              if(distanceRev !== Infinity) {
+                if(airbox[2] > 0.0) {
+                  pm25Cellsn += distanceRev * airbox[2];
+                  pm25Cellsd += distanceRev;
+                }
+                if(airbox[3] > 0.0) {
+                  temperatureCellsn += distanceRev * airbox[3];
+                  temperatureCellsd += distanceRev;
+                }
+              }
+            });
+            let pm25V = Math.round(pm25Cellsn / pm25Cellsd * 10) / 10.0;
+            let temperatureV = Math.round(temperatureCellsn / temperatureCellsd * 10) / 10.0;
+            marker.bindPopup(`<p>Coordinate: ${latlng.lat}, ${latlng.lng}<br />
+            PM2.5: ${pm25V}<br /> 
+            Temprature: ${temperatureV}</p>`, {
+              "autoClose": false,
+              "closeOnClick": false
+            });
+            marker.openPopup();
+          });
+          marker.addTo(map);
+        });
     })
     .catch(function(error) {
       console.log(error);
