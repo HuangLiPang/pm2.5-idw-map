@@ -75,18 +75,25 @@
     pm25Legend = new L.control.IDWLegend(pm25LegendGradients, pm25LegendColorCode, {
       position: 'bottomright'
     }).addTo(map),
-    temperatureLegendGradients = [5, 10, 15, 25, 27, 30, 32, 35],
+    temperatureLegendGradients = [
+      5, 10, 15, 17, 20, 22,
+      24, 25, 27, 30, 32, 35
+    ],
     temperatureLengendColorCode = function getColor(d){
       d = d / 100.0;
-      return d < 0.05 ? "#0000FF":
-        d < 0.10 ? "#009AFF":
-        d < 0.15 ? "#00CFCF":
-        d < 0.25 ? "#00FF00":
-        d < 0.27 ? "#CFCF00":
-        d < 0.30 ? "#FF9A00":
-        d < 0.32 ? "#FF0000":
-        d < 0.35 ? "#FF00FF":
-                   "#9A009A";
+      return d < 0.05 ? "#001f3f":
+        d < 0.10 ? "#0074D9":
+        d < 0.15 ? "#7FDBFF":
+        d < 0.17 ? "#39CCCC":
+        d < 0.20 ? "#3D9970":
+        d < 0.22 ? "#2ECC40":
+        d < 0.24 ? "#01FF70":
+        d < 0.25 ? "#FFDC00":
+        d < 0.27 ? "#FF851B":
+        d < 0.30 ? "#FF4136":
+        d < 0.32 ? "#F012BE":
+        d < 0.35 ? "#B10DC9":
+                   "#85144b"
     },
     temperatureLegend = new L.control.IDWLegend(temperatureLegendGradients, temperatureLengendColorCode, {
       position: 'bottomright'
@@ -161,14 +168,18 @@
       },
       tempIDWGradients = {
         0.001: "#FFFFFF",
-        0.05: "#0000FF",
-        0.10: "#009AFF",
-        0.15: "#00CFCF",
-        0.25: "#00FF00",
-        0.27: "#CFCF00",
-        0.30: "#FF9A00",
-        0.32: "#FF0000",
-        0.35: "#FF00FF"
+        0.05: "#001f3f",
+        0.10: "#0074D9",
+        0.15: "#7FDBFF",
+        0.17: "#39CCCC",
+        0.20: "#3D9970",
+        0.22: "#2ECC40",
+        0.24: "#01FF70",
+        0.25: "#FFDC00",
+        0.27: "#FF851B",
+        0.30: "#FF4136",
+        0.32: "#F012BE",
+        0.35: "#B10DC9"
       };
 
       pm25IDWLayer = new L.idwLayer(airboxPoints, 2, pm25IDWGradients, IDWOptions),
@@ -260,10 +271,10 @@
       // change gradient when baselayer change
       map.on("baselayerchange", function(baselayer){
         if(baselayer.name === "PM2.5 IDW Diagram") {
-          temperatureLegend.removeFrom(map);
+          temperatureLegend.remove();
           pm25Legend.addTo(map);
         } else if(baselayer.name === "Temprature IDW Diagram") {
-          pm25Legend.removeFrom(map);
+          pm25Legend.remove();
           temperatureLegend.addTo(map);
         }
       });
@@ -299,11 +310,18 @@
             let pm25Cellsd = 0.0;
             let temperatureCellsn = 0.0;
             let temperatureCellsd = 0.0;
-            airboxInCell.forEach(airbox => {
+            let pm25V = 0.0;
+            let temperatureV = 0.0;
+            airboxInCell.every(airbox => {
               // console.log(airbox);
               let airboxCoordinate = new L.latLng(airbox[0], airbox[1]);
               // console.log(airboxCoordinate);
               let distance = airboxCoordinate.distanceTo(latlng) / 1000.0;
+              if(distance === 0) {
+                pm25V = airbox[2];
+                temperatureV = airbox[3];
+                return false;
+              }
               let distanceRev = 1 / (distance ^ p);
               if(distanceRev !== Infinity) {
                 if(airbox[2] > 0.0) {
@@ -315,16 +333,21 @@
                   temperatureCellsd += distanceRev;
                 }
               }
+              return true;
             });
-            let pm25V = Math.round(pm25Cellsn / pm25Cellsd * 10) / 10.0;
-            let temperatureV = Math.round(temperatureCellsn / temperatureCellsd * 10) / 10.0;
+            pm25V = Math.round(pm25Cellsn / pm25Cellsd * 10) / 10.0;
+            temperatureV = Math.round(temperatureCellsn / temperatureCellsd * 10) / 10.0;
             marker.bindPopup(`<p>Coordinate: ${latlng.lat}, ${latlng.lng}<br />
             PM2.5: ${pm25V}<br /> 
             Temprature: ${temperatureV}</p>`, {
+              "maxWidth": window.innerWidth * 0.4,
               "autoClose": false,
               "closeOnClick": false
-            });
-            marker.openPopup();
+            }).openPopup();
+          });
+          marker.on("dblclick", function removeMarker(event) {
+            // this === marker
+            this.removeFrom(map);
           });
           marker.addTo(map);
         });
@@ -332,6 +355,27 @@
     .catch(function(error) {
       console.log(error);
     });
+
+  // notice setting
+  let currentLanguage = navigator.language;
+  let noticeURL;
+  if(currentLanguage === "zh-TW") {
+    noticeURL = "notice_zh-TW.html";
+  } else {
+    noticeURL = "notice_en-US.html"
+  }
+  let noticeRequest = makeRequest("GET", noticeURL);
+  noticeRequest.then(text => {
+    let popup = new L.popup({
+      "maxWidth": window.innerWidth * 0.6,
+      "className": "airbox-notice"
+    }).setLatLng([23.77, 120.88])
+      .setContent(text);
+    popup.addTo(map);
+    document.getElementsByClassName("airbox-notice")[0].style.fontSize = "16px";
+  }).catch(function(error) {
+    console.log(error);
+  });
 
   // make request function in promise
   // for loading json and geojson

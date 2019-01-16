@@ -358,8 +358,8 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
     }
 
     for (var k = 0; k < numberOfData; k++) {
-      // p is the pixel coordinate of _latlngs[k] on the screen 
-      var p = this._map.latLngToContainerPoint(this._latlngs[k]),
+      // p is the pixel coordinate of _latlngs[k] on the screen
+      var p = this._map.latLngToContainerPoint(L.latLng(this._latlngs[k][0], this._latlngs[k][1])),
         // left pixel coordinate of the cell
         x1 = p.x - station_range / offsetX,
         // right
