@@ -290,24 +290,35 @@
           }
         });
       }
+      let markerCounter = 0;
+      let tooltipFlag = 0;
       map.on('click',
         function mapClickListen(event) {
+          if(markerCounter === 2) {
+            return;
+          }
+          markerCounter++;
           let pos = event.latlng;
           let marker = new L.marker(
             pos, {
               draggable: true
             });
-
           marker.on('add dragend', function showIDW(event) {
             // console.log('marker dragend event');
-            console.log(event.target._latlng);
+            // console.log(event.target._latlng);
+            if(tooltipFlag === 0) {
+              tooltipFlag = 1;
+              this.bindTooltip("double tap to remove the marker.", { permanent: true }).openTooltip();
+              setTimeout(() => {
+                if(this.isTooltipOpen()) this.closeTooltip();
+              }, 3000);
+            }
             let latlng = event.target._latlng;
             let airboxInCell = airboxPoints.filter(point => {
               let airboxCoordinate = new L.latLng(point[0], point[1]);
               let distance = airboxCoordinate.distanceTo(latlng) / 1000.0;
               return distance < 10.0;
             })
-            console.log(airboxInCell);
             // Inverse Distance Weighting (IDW)
             //       Σ (1 / (di ^ p)) * vi
             // V = -------------------------
@@ -359,7 +370,9 @@
           });
           marker.on("dblclick", function removeMarker(event) {
             // this === marker
+            this.closeTooltip();
             this.removeFrom(map);
+            markerCounter--;
           });
           marker.addTo(map);
         });
@@ -384,12 +397,11 @@
     }).setContent(text);
     
     if(L.Browser.mobile) {
-      popup.setLatLng([22.77, 120.88]);
+      popup.setLatLng([22.77, 120.88]).addTo(map);
     } else {
+      popup.setLatLng([23.77, 120.88]).addTo(map);
       document.getElementsByClassName("airbox-notice")[0].style.fontSize = "16px";
-      popup.setLatLng([23.77, 120.88]);
-    } 
-    popup.addTo(map);
+    }
   }).catch(function(error) {
     console.log(error);
   });
