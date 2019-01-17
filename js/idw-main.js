@@ -30,74 +30,82 @@
 
   let baselayerGroup;
 
-  // IDW legend
-  let pm25LegendGradients = [
-      0,   1,   3,   6,   8, 
-     10,  12,  14,  16,  18, 
-     20,  25,  30,  35,  40, 
-     50,  60,  70,  80,  90, 
-    100, 110, 120, 130, 140, 150
-  ],
-    pm25LegendColorCode = function(d) {
-      d = d / 100.0;
-      return d < 0.00 ? "#FFFFFF" :
-        d < 0.01 ? "#CCCCFF" :
-        d < 0.03 ? "#BBBBEE" :
-        d < 0.06 ? "#AAAADD" :
-        d < 0.08 ? "#9999CC" :
-        d < 0.10 ? "#8888BB" :
-
-        d < 0.12 ? "#90FA96" :
-        d < 0.14 ? "#82EA64" :
-        d < 0.16 ? "#66DA36" :
-        d < 0.18 ? "#50CA2C" :
-        d < 0.20 ? "#4ABA26" :
-
-        d < 0.25 ? "#FAFA5D" :
-        d < 0.30 ? "#EAEA46" :
-        d < 0.35 ? "#DADA4D" :
-        d < 0.40 ? "#CACA42" :
-        d < 0.50 ? "#BABA36" :
-
-        d < 0.6 ? "#FF7777" :
-        d < 0.7 ? "#EE6666" :
-        d < 0.8 ? "#DD5555" :
-        d < 0.9 ? "#CC4444" :
-        d < 1.0 ? "#BB3333" :
-
-        d < 1.1 ? "#E056E0" :
-        d < 1.2 ? "#D045D0" :
-        d < 1.3 ? "#C034C0" :
-        d < 1.4 ? "#B023B0" :
-        d < 1.5 ? "#A012A0" :
-                  "#900190";
-    },
-    pm25Legend = new L.control.IDWLegend(pm25LegendGradients, pm25LegendColorCode, {
-      position: 'bottomright'
-    }).addTo(map),
-    temperatureLegendGradients = [
-      5, 10, 15, 17, 20, 22,
-      24, 25, 27, 30, 32, 35
+  if(!L.Browser.mobile) {
+    // PC mode
+    // add legend
+    // IDW legend
+    let pm25LegendGradients = [
+        0,   1,   3,   6,   8, 
+       10,  12,  14,  16,  18, 
+       20,  25,  30,  35,  40, 
+       50,  60,  70,  80,  90, 
+      100, 110, 120, 130, 140, 150
     ],
-    temperatureLengendColorCode = function getColor(d){
-      d = d / 100.0;
-      return d < 0.05 ? "#001f3f":
-        d < 0.10 ? "#0074D9":
-        d < 0.15 ? "#7FDBFF":
-        d < 0.17 ? "#39CCCC":
-        d < 0.20 ? "#3D9970":
-        d < 0.22 ? "#2ECC40":
-        d < 0.24 ? "#01FF70":
-        d < 0.25 ? "#FFDC00":
-        d < 0.27 ? "#FF851B":
-        d < 0.30 ? "#FF4136":
-        d < 0.32 ? "#F012BE":
-        d < 0.35 ? "#B10DC9":
-                   "#85144b"
-    },
-    temperatureLegend = new L.control.IDWLegend(temperatureLegendGradients, temperatureLengendColorCode, {
-      position: 'bottomright'
-    });
+      pm25LegendColorCode = function(d) {
+        d = d / 100.0;
+        return d < 0.00 ? "#FFFFFF" :
+          d < 0.01 ? "#CCCCFF" :
+          d < 0.03 ? "#BBBBEE" :
+          d < 0.06 ? "#AAAADD" :
+          d < 0.08 ? "#9999CC" :
+          d < 0.10 ? "#8888BB" :
+
+          d < 0.12 ? "#90FA96" :
+          d < 0.14 ? "#82EA64" :
+          d < 0.16 ? "#66DA36" :
+          d < 0.18 ? "#50CA2C" :
+          d < 0.20 ? "#4ABA26" :
+
+          d < 0.25 ? "#FAFA5D" :
+          d < 0.30 ? "#EAEA46" :
+          d < 0.35 ? "#DADA4D" :
+          d < 0.40 ? "#CACA42" :
+          d < 0.50 ? "#BABA36" :
+
+          d < 0.6 ? "#FF7777" :
+          d < 0.7 ? "#EE6666" :
+          d < 0.8 ? "#DD5555" :
+          d < 0.9 ? "#CC4444" :
+          d < 1.0 ? "#BB3333" :
+
+          d < 1.1 ? "#E056E0" :
+          d < 1.2 ? "#D045D0" :
+          d < 1.3 ? "#C034C0" :
+          d < 1.4 ? "#B023B0" :
+          d < 1.5 ? "#A012A0" :
+                    "#900190";
+      },
+      pm25Legend = new L.control.IDWLegend(pm25LegendGradients, pm25LegendColorCode, {
+        position: 'bottomright'
+      }).addTo(map),
+      temperatureLegendGradients = [
+        5, 10, 15, 17, 20, 22,
+        24, 25, 27, 30, 32, 35
+      ],
+      temperatureLengendColorCode = function getColor(d){
+        d = d / 100.0;
+        return d < 0.05 ? "#001f3f":
+          d < 0.10 ? "#0074D9":
+          d < 0.15 ? "#7FDBFF":
+          d < 0.17 ? "#39CCCC":
+          d < 0.20 ? "#3D9970":
+          d < 0.22 ? "#2ECC40":
+          d < 0.24 ? "#01FF70":
+          d < 0.25 ? "#FFDC00":
+          d < 0.27 ? "#FF851B":
+          d < 0.30 ? "#FF4136":
+          d < 0.32 ? "#F012BE":
+          d < 0.35 ? "#B10DC9":
+                     "#85144b"
+      },
+      temperatureLegend = new L.control.IDWLegend(temperatureLegendGradients, temperatureLengendColorCode, {
+        position: 'bottomright'
+      });
+    } else {
+      // mobile mode
+      // remove zoom control
+      map.removeControl(map.zoomControl);
+    }
   
   // map tile
   let Stamen_Terrain = new L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
@@ -268,16 +276,20 @@
         autoZIndex: true
       }).addTo(map);
 
-      // change gradient when baselayer change
-      map.on("baselayerchange", function(baselayer){
-        if(baselayer.name === "PM2.5 IDW Diagram") {
-          temperatureLegend.remove();
-          pm25Legend.addTo(map);
-        } else if(baselayer.name === "Temprature IDW Diagram") {
-          pm25Legend.remove();
-          temperatureLegend.addTo(map);
-        }
-      });
+      if(!L.Browser.mobile) {
+        // PC mode
+        // add legend control
+        // change gradient when baselayer change
+        map.on("baselayerchange", function(baselayer){
+          if(baselayer.name === "PM2.5 IDW Diagram") {
+            temperatureLegend.remove();
+            pm25Legend.addTo(map);
+          } else if(baselayer.name === "Temprature IDW Diagram") {
+            pm25Legend.remove();
+            temperatureLegend.addTo(map);
+          }
+        });
+      }
       map.on('click',
         function mapClickListen(event) {
           let pos = event.latlng;
@@ -369,10 +381,15 @@
     let popup = new L.popup({
       "maxWidth": window.innerWidth * 0.6,
       "className": "airbox-notice"
-    }).setLatLng([23.77, 120.88])
-      .setContent(text);
+    }).setContent(text);
+    
+    if(L.Browser.mobile) {
+      popup.setLatLng([22.77, 120.88]);
+    } else {
+      document.getElementsByClassName("airbox-notice")[0].style.fontSize = "16px";
+      popup.setLatLng([23.77, 120.88]);
+    } 
     popup.addTo(map);
-    document.getElementsByClassName("airbox-notice")[0].style.fontSize = "16px";
   }).catch(function(error) {
     console.log(error);
   });
