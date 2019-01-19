@@ -7,21 +7,7 @@
   }).setView([23.77, 120.88], 8);
 
   // baselayers
-  let pm25IDWLayer, tempIDWLayer;
-  // IDW layer options
-  let IDWOptions = {
-    // opacity  - the opacity of the IDW layer
-    // cellSize - height and width of each cell, 25 by default
-    // exp      - exponent used for weighting, 1 by default
-    // max      - maximum point values, 1.0 by default
-    // gradient - color gradient config, e.g. {0.4: 'blue', 0.65: 'lime', 1: 'red'}
-    opacity: 0.5,
-    maxZoom: 16,
-    minZoom: 8,
-    cellSize: 5,
-    exp: 2,
-    max: 200
-  };
+  let pm25IDWLayer, temperatureIDWLayer;
   let baselayers;
 
   // overlayers
@@ -29,10 +15,14 @@
   let overlayers;
 
   let baselayerGroup;
-
+  let pm25Legend, temperatureLegend;
   if(!L.Browser.mobile) {
+    // mobile mode
+    // remove zoom control
+    map.removeControl(map.zoomControl);
+  } else{
     // PC mode
-    // add legend
+    // add legends
     // IDW legend
     let pm25LegendGradients = [
         0,   1,   3,   6,   8, 
@@ -74,11 +64,11 @@
           d < 1.4 ? "#B023B0" :
           d < 1.5 ? "#A012A0" :
                     "#900190";
-      },
+      };
       pm25Legend = new L.control.IDWLegend(pm25LegendGradients, pm25LegendColorCode, {
         position: 'bottomright'
-      }).addTo(map),
-      temperatureLegendGradients = [
+      }).addTo(map);
+      let temperatureLegendGradients = [
         5, 10, 15, 17, 20, 22,
         24, 25, 27, 30, 32, 35
       ],
@@ -97,14 +87,10 @@
           d < 0.32 ? "#F012BE":
           d < 0.35 ? "#B10DC9":
                      "#85144b"
-      },
+      };
       temperatureLegend = new L.control.IDWLegend(temperatureLegendGradients, temperatureLengendColorCode, {
         position: 'bottomright'
       });
-    } else {
-      // mobile mode
-      // remove zoom control
-      map.removeControl(map.zoomControl);
     }
   
   // map tile
@@ -112,8 +98,6 @@
     attribution: `<a target="_blank" rel="noopener noreferrer" href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a> | ` + 
       `Tiles by <a target="_blank" rel="noopener noreferrer" href="http://stamen.com">Stamen Design</a>, ` +
       `&copy; <a target="_blank" rel="noopener noreferrer" href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>`,
-      // Credits not used
-      // <a href='https://sites.google.com/site/cclljj/NRL'>IIS-NRL</a>
     minZoom: 0,
     maxZoom: 16,
     ext: 'png'
@@ -142,60 +126,83 @@
       // airboxPoints = [[lat, lng, pm2.5, temperature, humidity]]
       let airboxPoints = jsons[0].points;
 
-      let pm25IDWGradients = {
-        0.001: "#FFFFFF",
-        0.01: "#CCCCFF",
-        0.03: "#BBBBEE",
-        0.06: "#AAAADD",
-        0.08: "#9999CC",
-        0.10: "#8888BB",
+      let pm25IDWOptions = {
+        // opacity  - the opacity of the IDW layer
+        // cellSize - height and width of each cell, 25 by default
+        // exp      - exponent used for weighting, 1 by default
+        // max      - maximum point values, 1.0 by default
+        // gradient - color gradient config, e.g. {0.4: 'blue', 0.65: 'lime', 1: 'red'}
+        opacity: 0.5,
+        maxZoom: 16,
+        minZoom: 8,
+        cellSize: 5,
+        exp: 2,
+        max: 200,
+        gradient: {
+          0.001: "#FFFFFF",
+          0.01: "#CCCCFF",
+          0.03: "#BBBBEE",
+          0.06: "#AAAADD",
+          0.08: "#9999CC",
+          0.10: "#8888BB",
 
-        0.12: "#90FA96",
-        0.14: "#82EA64",
-        0.16: "#66DA36",
-        0.18: "#50CA2C",
-        0.20: "#4ABA26",
+          0.12: "#90FA96",
+          0.14: "#82EA64",
+          0.16: "#66DA36",
+          0.18: "#50CA2C",
+          0.20: "#4ABA26",
 
-        0.25: "#FAFA5D",
-        0.30: "#EAEA46",
-        0.35: "#DADA4D",
-        0.40: "#CACA42",
-        0.50: "#BABA36",
+          0.25: "#FAFA5D",
+          0.30: "#EAEA46",
+          0.35: "#DADA4D",
+          0.40: "#CACA42",
+          0.50: "#BABA36",
 
-        0.6: "#FF7777",
-        0.7: "#EE6666",
-        0.8: "#DD5555",
-        0.9: "#CC4444",
-        1.0: "#BB3333",
+          0.6: "#FF7777",
+          0.7: "#EE6666",
+          0.8: "#DD5555",
+          0.9: "#CC4444",
+          1.0: "#BB3333",
 
-        1.1: "#E046E0",
-        1.2: "#D03DD0",
-        1.3: "#C032C0",
-        1.4: "#B026B0",
-        1.5: "#A01DA0"
-      },
-      tempIDWGradients = {
-        0.001: "#FFFFFF",
-        0.05: "#001f3f",
-        0.10: "#0074D9",
-        0.15: "#7FDBFF",
-        0.17: "#39CCCC",
-        0.20: "#3D9970",
-        0.22: "#2ECC40",
-        0.24: "#01FF70",
-        0.25: "#FFDC00",
-        0.27: "#FF851B",
-        0.30: "#FF4136",
-        0.32: "#F012BE",
-        0.35: "#B10DC9"
+          1.1: "#E046E0",
+          1.2: "#D03DD0",
+          1.3: "#C032C0",
+          1.4: "#B026B0",
+          1.5: "#A01DA0"
+        },
+        dataType: 2
+      };
+      let temperatureIDWOptions = {
+        opacity: 0.5,
+        maxZoom: 16,
+        minZoom: 8,
+        cellSize: 5,
+        exp: 2,
+        max: 200,
+        gradient: {
+          0.001: "#FFFFFF",
+          0.05: "#001f3f",
+          0.10: "#0074D9",
+          0.15: "#7FDBFF",
+          0.17: "#39CCCC",
+          0.20: "#3D9970",
+          0.22: "#2ECC40",
+          0.24: "#01FF70",
+          0.25: "#FFDC00",
+          0.27: "#FF851B",
+          0.30: "#FF4136",
+          0.32: "#F012BE",
+          0.35: "#B10DC9"
+        },
+        dataType: 3
       };
 
-      pm25IDWLayer = new L.idwLayer(airboxPoints, 2, pm25IDWGradients, IDWOptions),
-      tempIDWLayer = new L.idwLayer(airboxPoints, 3, tempIDWGradients, IDWOptions);
+      pm25IDWLayer = new L.idwLayer(airboxPoints, pm25IDWOptions),
+      temperatureIDWLayer = new L.idwLayer(airboxPoints, temperatureIDWOptions);
       baselayers = {
         // IDW layers
         "PM2.5 IDW Diagram": pm25IDWLayer.addTo(map),
-        "Temprature IDW Diagram": tempIDWLayer,
+        "Temprature IDW Diagram": temperatureIDWLayer,
       };
       // overlayers
       // L.geoJson doc:
@@ -278,7 +285,7 @@
 
       if(!L.Browser.mobile) {
         // PC mode
-        // add legend control
+        // add legend event
         // change gradient when baselayer change
         map.on("baselayerchange", function(baselayer){
           if(baselayer.name === "PM2.5 IDW Diagram") {
