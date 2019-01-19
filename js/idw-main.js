@@ -16,7 +16,7 @@
 
   let baselayerGroup;
   let pm25Legend, temperatureLegend;
-  if(!L.Browser.mobile) {
+  if(L.Browser.mobile) {
     // mobile mode
     // remove zoom control
     map.removeControl(map.zoomControl);
