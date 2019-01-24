@@ -5,6 +5,10 @@ L.Control.IDWLogo = L.Control.extend({
     L.setOptions(this, options);
   },
   onAdd: function(map) {
+    if(L.Browser.mobile) {
+      this.ifMobile();
+      return new L.DomUtil.create('div', 'logo');
+    }
     let date = new Date(this.options['latest-updated-time']),
       latestUpdatedTime = date.toLocaleString("zh-TW", {
         hour12: false, 
@@ -12,7 +16,7 @@ L.Control.IDWLogo = L.Control.extend({
         timeZoneName: "short"
       });
 
-    let div = L.DomUtil.create('div', 'logo');
+    let div = new L.DomUtil.create('div', 'logo');
     div.innerHTML = 
       `<table border=1 cellspacing=0 cellpadding=0 bgcolor='#000080'>
         <tr bgcolor='#000080'>
@@ -37,6 +41,10 @@ L.Control.IDWLogo = L.Control.extend({
         </tr>
       </table>`;
     return div;
+  },
+  ifMobile: function () {
+    document.getElementsByClassName("leaflet-control-attribution")[0].innerHTML += ` | <a target="_blank" rel="noopener noreferrer" style="text-decoration: none" href="https://www.iis.sinica.edu.tw/index_zh.html">IIS Sinica</a>
+             | <a target="_blank" rel="noopener noreferrer" style="text-decoration: none" href="http://lass-net.org/">LASS</a>`
   }
 });
 
