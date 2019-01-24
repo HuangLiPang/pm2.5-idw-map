@@ -1,7 +1,7 @@
 (function(window) {
   "use strict";
   // create a map
-  let map= L.map("map", {
+  let map = L.map("map", {
     attributionControl: true,
     maxZoom: 16
   }).setView([23.77, 120.88], 8);
@@ -108,7 +108,7 @@
     "data/emission_points_polygons.geojson", 
     "data/pm25Contour_grey_5.geojson",
     "data/pm25Contour_grey_10.geojson", 
-    // "data/gfs.json"
+    "data/cwb.json"
   ];
 
   Promise.all(urls.map(url => makeRequest('GET', url)))
@@ -125,7 +125,7 @@
       //  ];
       // airboxPoints = [[lat, lng, pm2.5, temperature, humidity]]
       let airboxPoints = jsons[0].points;
-
+      let cwbPoints = jsons[4].points;
       let pm25IDWOptions = {
         // opacity  - the opacity of the IDW layer
         // cellSize - height and width of each cell, 25 by default
@@ -196,13 +196,38 @@
         },
         dataType: 3
       };
-
-      pm25IDWLayer = new L.idwLayer(airboxPoints, pm25IDWOptions),
+      let cwbTemperatureIDWOptions = {
+        opacity: 0.5,
+        maxZoom: 16,
+        minZoom: 8,
+        cellSize: 5,
+        exp: 2,
+        max: 200,
+        gradient: {
+          0.001: "#FFFFFF",
+          0.05: "#001f3f",
+          0.10: "#0074D9",
+          0.15: "#7FDBFF",
+          0.17: "#39CCCC",
+          0.20: "#3D9970",
+          0.22: "#2ECC40",
+          0.24: "#01FF70",
+          0.25: "#FFDC00",
+          0.27: "#FF851B",
+          0.30: "#FF4136",
+          0.32: "#F012BE",
+          0.35: "#B10DC9"
+        },
+        dataType: 2
+      }
+      pm25IDWLayer = new L.idwLayer(airboxPoints, pm25IDWOptions);
       temperatureIDWLayer = new L.idwLayer(airboxPoints, temperatureIDWOptions);
+      let cwbTempIDWLayer = new L.idwLayer(cwbPoints, cwbTemperatureIDWOptions);
       baselayers = {
         // IDW layers
-        "PM2.5 IDW Diagram": pm25IDWLayer.addTo(map),
-        "Temprature IDW Diagram": temperatureIDWLayer,
+        "AirBox PM2.5 IDW Diagram": pm25IDWLayer.addTo(map),
+        "AirBox Temprature IDW Diagram": temperatureIDWLayer,
+        "CWB Temprature IDW Diagram": cwbTempIDWLayer
       };
       // overlayers
       // L.geoJson doc:
@@ -288,10 +313,10 @@
         // add legend event
         // change gradient when baselayer change
         map.on("baselayerchange", function(baselayer){
-          if(baselayer.name === "PM2.5 IDW Diagram") {
+          if(baselayer.name === "AirBox PM2.5 IDW Diagram") {
             temperatureLegend.remove();
             pm25Legend.addTo(map);
-          } else if(baselayer.name === "Temprature IDW Diagram") {
+          } else if(baselayer.name === "AirBox Temprature IDW Diagram" || baselayer.name === "CWB Temprature IDW Diagram") {
             pm25Legend.remove();
             temperatureLegend.addTo(map);
           }
