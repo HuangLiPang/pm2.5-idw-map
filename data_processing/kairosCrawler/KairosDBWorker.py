@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
-''' 
-'''
+# -*- coding: utf-8 -*-
+"""
+  Created on 2019 Jan.
+  @author: HuangLiPang
+
+  python version: 2.7
+
+  Kairos Rest API doc:
+  http://kairosdb.github.io/docs/build/html/restapi/index.html
+
+  Description:
+    A class for KairosDB query.
+"""
 
 import requests
 import json
