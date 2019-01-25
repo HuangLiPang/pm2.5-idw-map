@@ -1,13 +1,13 @@
 (function(window) {
   "use strict";
   // create a map
-  let map= L.map("map", {
+  let map = L.map("map", {
     attributionControl: true,
     maxZoom: 16
   }).setView([23.77, 120.88], 8);
 
   // baselayers
-  let pm25IDWLayer, temperatureIDWLayer;
+  let pm25IDWLayer, temperatureIDWLayer, cwbTempIDWLayer;
   let baselayers;
 
   // overlayers
@@ -108,7 +108,7 @@
     "data/emission_points_polygons.geojson", 
     "data/pm25Contour_grey_5.geojson",
     "data/pm25Contour_grey_10.geojson", 
-    // "data/gfs.json"
+    "data/cwb.json"
   ];
 
   Promise.all(urls.map(url => makeRequest('GET', url)))
@@ -125,7 +125,7 @@
       //  ];
       // airboxPoints = [[lat, lng, pm2.5, temperature, humidity]]
       let airboxPoints = jsons[0].points;
-
+      let cwbPoints = jsons[4].points;
       let pm25IDWOptions = {
         // opacity  - the opacity of the IDW layer
         // cellSize - height and width of each cell, 25 by default
@@ -196,13 +196,38 @@
         },
         dataType: 3
       };
-
-      pm25IDWLayer = new L.idwLayer(airboxPoints, pm25IDWOptions),
+      let cwbTemperatureIDWOptions = {
+        opacity: 0.5,
+        maxZoom: 16,
+        minZoom: 8,
+        cellSize: 5,
+        exp: 2,
+        max: 200,
+        gradient: {
+          0.001: "#FFFFFF",
+          0.05: "#001f3f",
+          0.10: "#0074D9",
+          0.15: "#7FDBFF",
+          0.17: "#39CCCC",
+          0.20: "#3D9970",
+          0.22: "#2ECC40",
+          0.24: "#01FF70",
+          0.25: "#FFDC00",
+          0.27: "#FF851B",
+          0.30: "#FF4136",
+          0.32: "#F012BE",
+          0.35: "#B10DC9"
+        },
+        dataType: 2
+      }
+      pm25IDWLayer = new L.idwLayer(airboxPoints, pm25IDWOptions);
       temperatureIDWLayer = new L.idwLayer(airboxPoints, temperatureIDWOptions);
+      cwbTempIDWLayer = new L.idwLayer(cwbPoints, cwbTemperatureIDWOptions);
       baselayers = {
         // IDW layers
-        "PM2.5 IDW Diagram": pm25IDWLayer.addTo(map),
-        "Temprature IDW Diagram": temperatureIDWLayer,
+        "AirBox PM2.5 IDW": pm25IDWLayer.addTo(map),
+        "AirBox Temprature IDW": temperatureIDWLayer,
+        "CWB Temprature IDW": cwbTempIDWLayer
       };
       // overlayers
       // L.geoJson doc:
@@ -246,20 +271,6 @@
           layer.bindPopup(feature.properties.title);
         }
       });
-      /*
-      "Wind": L.velocityLayer({
-        displayValues: true,
-        displayOptions: {
-          velocityType: 'Global Wind',
-          displayPosition: 'bottomright',
-          displayEmptyString: 'No wind data'
-        },
-        data: jsons[4],
-        maxVelocity: 15,
-        colorScale: ["rgb(0, 0, 0)", "rgb(105, 105, 105)", "rgb(128, 128, 128)", "rgb(169, 169, 169)", 
-                     "rgb(192, 192, 192)"] 
-      }).addTo(map)
-      */
 
       // the diagram must be in the following order
       // to make the emission point layer be the
@@ -288,10 +299,10 @@
         // add legend event
         // change gradient when baselayer change
         map.on("baselayerchange", function(baselayer){
-          if(baselayer.name === "PM2.5 IDW Diagram") {
+          if(baselayer.name === "AirBox PM2.5 IDW") {
             temperatureLegend.remove();
             pm25Legend.addTo(map);
-          } else if(baselayer.name === "Temprature IDW Diagram") {
+          } else if(baselayer.name === "AirBox Temprature IDW" || baselayer.name === "CWB Temprature IDW") {
             pm25Legend.remove();
             temperatureLegend.addTo(map);
           }
@@ -321,11 +332,13 @@
               }, 3000);
             }
             let latlng = event.target._latlng;
-            let airboxInCell = airboxPoints.filter(point => {
-              let airboxCoordinate = new L.latLng(point[0], point[1]);
-              let distance = airboxCoordinate.distanceTo(latlng) / 1000.0;
+            let checkDist = function(point) {
+              let Coordinate = new L.latLng(point[0], point[1]);
+              let distance = Coordinate.distanceTo(latlng) / 1000.0;
               return distance < 10.0;
-            })
+            };
+            let airboxInCell = airboxPoints.filter(checkDist);
+            let cwbInCell = cwbPoints.filter(checkDist);
             // Inverse Distance Weighting (IDW)
             //       Σ (1 / (di ^ p)) * vi
             // V = -------------------------
@@ -340,13 +353,17 @@
             let pm25Cellsd = 0.0;
             let temperatureCellsn = 0.0;
             let temperatureCellsd = 0.0;
+            let cwbCellsn = 0.0;
+            let cwbCellsd = 0.0;
             let pm25V = 0.0;
             let temperatureV = 0.0;
+            let cwbTempV = 0.0;
             airboxInCell.every(airbox => {
               // console.log(airbox);
               let airboxCoordinate = new L.latLng(airbox[0], airbox[1]);
               // console.log(airboxCoordinate);
               let distance = airboxCoordinate.distanceTo(latlng) / 1000.0;
+              // An AirBox locates here
               if(distance === 0) {
                 pm25V = airbox[2];
                 temperatureV = airbox[3];
@@ -365,11 +382,31 @@
               }
               return true;
             });
+            cwbInCell.every(cwbStation => {
+              let cwbCoordinate = new L.latLng(cwbStation[0], cwbStation[1]);
+              // console.log(airboxCoordinate);
+              let distance = cwbCoordinate.distanceTo(latlng) / 1000.0;
+              // An AirBox locates here
+              if(distance === 0) {
+                cwbTempV = cwbStation[2];
+                return false;
+              }
+              let distanceRev = 1 / (distance ^ p);
+              if(distanceRev !== Infinity) {
+                if(cwbStation[2] > 0.0) {
+                  cwbCellsn += distanceRev * cwbStation[2];
+                  cwbCellsd += distanceRev;
+                }
+              }
+              return true;
+            })
             pm25V = Math.round(pm25Cellsn / pm25Cellsd * 10) / 10.0;
             temperatureV = Math.round(temperatureCellsn / temperatureCellsd * 10) / 10.0;
+            cwbTempV = Math.round(cwbCellsn / cwbCellsd * 10) / 10.0;
             marker.bindPopup(`<p>Coordinate: ${latlng.lat}, ${latlng.lng}<br />
-            PM2.5: ${pm25V}<br /> 
-            Temprature: ${temperatureV}</p>`, {
+            AirBox PM2.5: ${pm25V}<br />
+            AirBox Temprature: ${temperatureV}<br />
+            CWB Temprature: ${cwbTempV}</p>`, {
               "maxWidth": window.innerWidth * 0.4,
               "autoClose": false,
               "closeOnClick": false
