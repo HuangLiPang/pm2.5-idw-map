@@ -18,10 +18,10 @@ L.Control.IDWLogo = L.Control.extend({
 
     let div = new L.DomUtil.create('div', 'logo');
     div.innerHTML = 
-      `<table border=1 cellspacing=0 cellpadding=0 bgcolor='#000080'>
+      `<table border=1 cellspacing=0 cellpadding=0>
         <tr bgcolor='#000080'>
           <td align="center">
-            <font size='+1' color='#FFFFFF'><b>PM2.5 IDW Diagram</b></font>
+            <font size='+1' color='#FFFFFF'>PM2.5 IDW Diagram</font>
           </td>
         </tr>
         <tr bgcolor='#ffffff'>
