@@ -27,6 +27,7 @@ from KairosDBWorker import KairosDBWorker
 KairosDB_URL = config.KairosDB["URL"]
 KairosDB_USER = config.KairosDB["USER"]
 KairosDB_PASSWORD = config.KairosDB["PASSWORD"]
+KairosDB_FilePath = config.KairosDB["FilePath"]
 
 def findInfo(reg, source):
   result = re.search(reg, source)
@@ -119,5 +120,5 @@ cwb = {
   "latest-updated-time": strftime("%Y-%m-%dT%H:%M:%SZ", gmtime()), 
   "points": tempData
 }
-with open('../../data/cwb.json', 'w') as outfile:  
+with open(KairosDB_FilePath, 'w') as outfile:  
   json.dump(cwb, outfile)
