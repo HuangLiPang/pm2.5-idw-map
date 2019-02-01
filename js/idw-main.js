@@ -13,7 +13,7 @@
   let baselayers;
 
   // overlayers
-  let emissionLayer, contourInterval5, contourInterval10;
+  let contourInterval10;
   let overlayers;
 
   let baselayerGroup;
@@ -32,10 +32,8 @@
 
   let urls = [
     "data/data.json",
-    "data/pm25Contour_grey_5.geojson",
     "data/pm25Contour_grey_10.geojson", 
-    "data/cwb.json",
-    // "data/emission_points_polygons.geojson"
+    "data/cwb.json"
   ];
 
   Promise.all(urls.map(url => makeRequest('GET', url)))
@@ -46,13 +44,12 @@
     .then(jsons => {
       // jsons = [
       //    data.json, 
-      //    emission_points_polygons.geojson,
-      //    pm25Contour_grey_5.geojson,
-      //    pm25Contour_grey_10.geojson
+      //    pm25Contour_grey_10.geojson,
+      //    cwb.json
       //  ];
       // airboxPoints = [[lat, lng, pm2.5, temperature, humidity]]
       let airboxPoints = jsons[0].points;
-      let cwbPoints = jsons[3].points;
+      let cwbPoints = jsons[2].points;
       let pm25IDWOptions = {
         // opacity  - the opacity of the IDW layer
         // cellSize - height and width of each cell, 25 by default
@@ -157,37 +154,7 @@
         "CWB Temprature IDW": cwbTempIDWLayer
       };
       // overlayers
-      // L.geoJson doc:
-      // https://leafletjs.com/reference-0.7.7.html#geojson
-      // emission pointe layer
-      // emissionLayer = new L.geoJson(jsons[1], {
-      //   style: function (feature) {
-      //     return {
-      //       "color": feature.properties.stroke,
-      //       "weight": 2,
-      //       "fillOpacity": feature.properties["fill-opacity"],
-      //       "fill": true,
-      //       "fillColor": feature.properties["fill"]
-      //     };
-      //   },
-      //   onEachFeature: function (feature, layer) {
-      //     layer.bindPopup(feature.properties.title);
-      //   }
-      // });
-      contourInterval5 = new L.geoJson(jsons[1], {
-        style: function (feature) {
-          return {
-            // style option doc:
-            // https://leafletjs.com/reference-1.3.0.html#path
-            "color": feature.properties.stroke,
-            "weight": feature.properties["stroke-width"],
-          };
-        },
-        onEachFeature: function (feature, layer) {
-          layer.bindPopup(feature.properties.title);
-        }
-      });
-      contourInterval10 = new L.geoJson(jsons[2], {
+      contourInterval10 = new L.geoJson(jsons[1], {
         style: function (feature) {
           return {
             "color": feature.properties.stroke,
@@ -198,21 +165,20 @@
           layer.bindPopup(feature.properties.title);
         }
       });
-
+      
       // the diagram must be in the following order
       // to make the emission point layer be the
       // most upper layer in the map
       overlayers = {
-        // "Emission Points": emissionLayer,
         // contour layers
-        "PM2.5 Contour Interval: 5": contourInterval5,
         "PM2.5 Contour Interval: 10": contourInterval10,
       };
 
       // add layer controller to map
       let layerController = new L.control.layers(baselayers, overlayers, {
         collapsed: false,
-        autoZIndex: true
+        autoZIndex: true,
+        position: "topleft"
       }).addTo(map);
 
       if(L.Browser.mobile) {
@@ -250,7 +216,7 @@
         // PC mode
         // add legends
         // IDW legend
-        map.addControl(L.control.zoom({position: "topleft"}));
+        map.addControl(L.control.zoom({position: "topright"}));
         let pm25LegendGradients = [
             0,   1,   3,   6,   8, 
            10,  12,  14,  16,  18, 
