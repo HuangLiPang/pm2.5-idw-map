@@ -320,7 +320,7 @@
           });
         // add legend check
         // change gradient when baselayer change
-        map.on("baselayerchange", function(baselayer){
+        map.on("baselayerchange", function(baselayer) {
           let layers = document.getElementsByClassName("leaflet-control-layers-selector");
           if(baselayer.name === "AirBox PM2.5 IDW") {
             temperatureLegend.remove();
@@ -349,6 +349,21 @@
           }
         });
       }
+      // disable overlays checkbox when zoomend and the baselayer is temperature idw
+      map.on("zoomend", function(event) {
+        for(let key in baselayers) {
+          if(key.includes("Temprature")) {
+            if(map.hasLayer(baselayers[key])) {
+              let layers = document.getElementsByClassName("leaflet-control-layers-selector");
+              for (let i = layers.length - 1; i >= 0; i--) {
+                if(layers[i].type === "checkbox") {
+                  layers[i].disabled = true;
+                }
+              }
+            }
+          }
+        }
+      })
       let Stamen_Terrain = new L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
         attribution: attribution,
         minZoom: 8,
@@ -383,6 +398,19 @@
           idwDisplay = L.control.displayIDW(idwMarker.getIDW(), {
             position: "bottomleft"
           }).addTo(map);
+          // close button function
+          document.getElementById("idw-display-close-button").onclick = function(event) {
+            // avoid click on the map again
+            map.off('click', mapClickListen);
+            idwMarker.remove();
+            idwDisplay.remove();
+            idwMarker = undefined;
+            idwDisplay = undefined;
+            // turn on the map click function
+            setTimeout(() => {
+              map.on('click', mapClickListen);
+            }, 100);
+          };
         });
     })
     .catch(function(error) {
@@ -404,7 +432,7 @@
     if(L.Browser.mobile) {
       popup.setLatLng([22.77, 120.88]).addTo(map);
     } else {
-      popup.setLatLng([23.77, 120.88]).addTo(map);
+      popup.setLatLng([22.77, 120.88]).addTo(map);
       document.getElementsByClassName("airbox-notice")[0].style.fontSize = "16px";
     }
   }).catch(function(error) {

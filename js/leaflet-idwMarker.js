@@ -37,6 +37,7 @@ L.IdwMarker = L.CircleMarker.extend({
     
     // cellsn = Σ (1 / (di ^ p)) * vi
     // cellsd = Σ (1 / (di ^ p))
+    if(inCell.length === 0) return "N/A";
     for (let i = inCell.length - 1; i >= 0; i--) {
       let destCoor = new L.latLng(inCell[i][0], inCell[i][1]);
       let distance = destCoor.distanceTo(this._latlng) / 1000.0;

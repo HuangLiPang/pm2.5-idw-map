@@ -1,0 +1,46 @@
+.idw-display table,
+.idw-legend table {
+  font-size: 1.2em;
+}
+
+.idw-display,
+.idw-logo {
+  width: 100%;
+}
+.idw-display table,
+.idw-logo table {
+  width: 100%;
+}
+
+.idw-display td {
+  padding-left: 6px; 
+  padding-right: 16px;
+  text-align: center;
+}
+.idw-display td:first-child {
+  text-align: right;
+}
+.idw-display td:nth-child(2) {
+  width: 120px;
+} 
+
+.idw-logo table {
+  font-size: 1.4em;
+}
+.idw-logo td {
+  width: 240px;
+  padding-left: 6px; 
+  padding-right: 16px;
+  text-align: center;
+}
+.idw-logo thead {
+  background-color: #000080;
+  color: #ffffff;
+}
+.idw-logo a {
+  text-decoration: none;
+}
+
+.idw-logo img {
+  height: 45px;
+}

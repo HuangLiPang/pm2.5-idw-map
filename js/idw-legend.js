@@ -6,7 +6,7 @@ L.Control.IDWLegend = L.Control.extend({
   },
 
   onAdd: function(map) {
-    let container = L.DomUtil.create('div', 'idw-legend'),
+    let container = L.DomUtil.create('div', 'idw-legend leaflet-control-layers'),
       gradesLabels = '';
 
     // loop through our density intervals and 
@@ -18,13 +18,13 @@ L.Control.IDWLegend = L.Control.extend({
         `${this.gradients[i]}${(this.gradients[i + 1] ? `&ndash;${this.gradients[i + 1]}` : '+')}<br>`;
     }
     container.innerHTML =
-      `<table border=1 bgcolor="#ffffff" cellspacing=0 cellpadding=5>
-        <tr>
-          <td bgcolor="#ffffff">
-            <font size="-1">${gradesLabels}</font>
-          </td>
-        </tr>
-      </table>`;
+      `<div class="leaflet-control-layers-base">
+        <table>
+          <tr>
+            <td>${gradesLabels}</td>
+          </tr>
+        </table>
+      </div>`;
 
     return container;
   }
