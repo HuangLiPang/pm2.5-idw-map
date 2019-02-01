@@ -221,7 +221,7 @@ contourIntervals = {
   # "1": numpy.linspace(start = 0, stop = 150, num = n_contours["1"]),
   # "2": numpy.linspace(start = 0, stop = 150, num = n_contours["2"]),
   # "3": numpy.linspace(start = 0, stop = 150, num = n_contours["3"]),
-  "5": numpy.linspace(start = 0, stop = 150, num = n_contours["5"]),
+  # "5": numpy.linspace(start = 0, stop = 150, num = n_contours["5"]),
   "10": numpy.linspace(start = 0, stop = 150, num = n_contours["10"])
 }
 
