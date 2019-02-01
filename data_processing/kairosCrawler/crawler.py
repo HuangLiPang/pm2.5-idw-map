@@ -28,6 +28,7 @@ KairosDB_URL = config.KairosDB["URL"]
 KairosDB_USER = config.KairosDB["USER"]
 KairosDB_PASSWORD = config.KairosDB["PASSWORD"]
 KairosDB_FilePath = config.KairosDB["FilePath"]
+KairosDB_LogPath = config.KairosDB["LogPath"]
 
 def findInfo(reg, source):
   result = re.search(reg, source)
@@ -41,7 +42,7 @@ logging.config.dictConfig(logging_config.LOGGING)
 # create logger
 logger = logging.getLogger()
 # RotatingFileNameHandler(filename, logPath, maxBytes=1024, backupCount=3)
-logger.addHandler(RotatingFileNameHandler(__file__, "./log", maxBytes=1024000, backupCount=5))
+logger.addHandler(RotatingFileNameHandler(__file__, KairosDB_LogPath, maxBytes=1024000, backupCount=5))
 
 worker = KairosDBWorker(KairosDB_URL, KairosDB_USER, KairosDB_PASSWORD)
 logger.info("create worker")
