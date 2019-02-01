@@ -7,7 +7,7 @@ L.Control.IDWLogo = L.Control.extend({
   onAdd: function(map) {
     if(L.Browser.mobile) {
       this.ifMobile();
-      return new L.DomUtil.create('div', 'logo');
+      return new L.DomUtil.create('div');
     }
     let date = new Date(this.options['latest-updated-time']),
       latestUpdatedTime = date.toLocaleString("zh-TW", {
@@ -16,34 +16,37 @@ L.Control.IDWLogo = L.Control.extend({
         timeZoneName: "short"
       });
 
-    let div = new L.DomUtil.create('div', 'logo');
+    let div = new L.DomUtil.create('div', 'idw-logo leaflet-control-layers');
     div.innerHTML = 
-      `<table border=1 cellspacing=0 cellpadding=0 bgcolor='#000080'>
-        <tr bgcolor='#000080'>
-          <td align="center">
-            <font size='+1' color='#FFFFFF'><b>PM2.5 IDW Diagram</b></font>
-          </td>
-        </tr>
-        <tr bgcolor='#ffffff'>
-          <td align='center' style="padding: 3px 5px;">
-            <a target="_blank" rel="noopener noreferrer" style="text-decoration: none" href="https://www.iis.sinica.edu.tw/index_zh.html">
-              <img src='./images/AS-logo.png' alt='Academia Sinica' height=40>
-            </a>
-            <a target="_blank" rel="noopener noreferrer" style="text-decoration: none" href="http://lass-net.org/">
-              <img src='./images/LASS-logo.png' alt='Location Aware Sensing System (LASS)' height=40>
-            </a>
-            <a target="_blank" rel="noopener noreferrer" style="text-decoration: none" href='https://github.com/HuangLiPang/pm2.5-idw-with-weather'>
-              <img src="./images/GHRepo-logo.png" alt='GitHub' height=40>
-            </a>
-            <br>
-            <font size='+1' color='#000000'>${latestUpdatedTime}</font>
-          </td>
-        </tr>
-      </table>`;
+      `<div class="leaflet-control-layers-base">
+        <table>
+          <thead>
+            <tr>
+              <td>PM2.5 IDW Diagram</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <a target="_blank" rel="noopener noreferrer" href="https://www.iis.sinica.edu.tw/index_zh.html">
+                  <img src='./images/AS-logo.png' alt='Academia Sinica'>
+                </a>
+                <a target="_blank" rel="noopener noreferrer" href="http://lass-net.org/">
+                  <img src='./images/LASS-logo.png' alt='Location Aware Sensing System (LASS)'>
+                </a>
+                <a target="_blank" rel="noopener noreferrer" href='https://github.com/HuangLiPang/pm2.5-idw-with-weather'>
+                  <img src="./images/GHRepo-logo.png" alt='GitHub'>
+                </a>
+                <br>${latestUpdatedTime.replace(/\[GMT\+8\]/i, "GMT\+8")}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
     return div;
   },
   ifMobile: function () {
-    document.getElementsByClassName("leaflet-control-attribution")[0].innerHTML += ` | <a target="_blank" rel="noopener noreferrer" style="text-decoration: none" href="https://www.iis.sinica.edu.tw/index_zh.html">IIS Sinica</a>
+    document.getElementsByClassName("leaflet-control-attribution")[0].innerHTML += ` | <a target="_blank" rel="noopener noreferrer" style="text-decoration: none" href="https://www.iis.sinica.edu.tw/index_zh.html">Sinica</a>
              | <a target="_blank" rel="noopener noreferrer" style="text-decoration: none" href="http://lass-net.org/">LASS</a>`
   }
 });

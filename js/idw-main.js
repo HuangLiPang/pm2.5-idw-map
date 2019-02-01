@@ -2,8 +2,10 @@
   "use strict";
   // create a map
   let map = L.map("map", {
+    zoomControl: false,
     attributionControl: true,
-    maxZoom: 16
+    maxZoom: 16,
+    minZoom: 8
   }).setView([23.77, 120.88], 8);
 
   // baselayers
@@ -11,102 +13,25 @@
   let baselayers;
 
   // overlayers
-  let emissionLayer, contourInterval5, contourInterval10;
+  let contourInterval10;
   let overlayers;
 
   let baselayerGroup;
   let pm25Legend, temperatureLegend;
-  if(L.Browser.mobile) {
-    // mobile mode
-    // remove zoom control
-    map.removeControl(map.zoomControl);
-  } else{
-    // PC mode
-    // add legends
-    // IDW legend
-    let pm25LegendGradients = [
-        0,   1,   3,   6,   8, 
-       10,  12,  14,  16,  18, 
-       20,  25,  30,  35,  40, 
-       50,  60,  70,  80,  90, 
-      100, 110, 120, 130, 140, 150
-    ],
-      pm25LegendColorCode = function(d) {
-        d = d / 100.0;
-        return d < 0.00 ? "#FFFFFF" :
-          d < 0.01 ? "#CCCCFF" :
-          d < 0.03 ? "#BBBBEE" :
-          d < 0.06 ? "#AAAADD" :
-          d < 0.08 ? "#9999CC" :
-          d < 0.10 ? "#8888BB" :
-
-          d < 0.12 ? "#90FA96" :
-          d < 0.14 ? "#82EA64" :
-          d < 0.16 ? "#66DA36" :
-          d < 0.18 ? "#50CA2C" :
-          d < 0.20 ? "#4ABA26" :
-
-          d < 0.25 ? "#FAFA5D" :
-          d < 0.30 ? "#EAEA46" :
-          d < 0.35 ? "#DADA4D" :
-          d < 0.40 ? "#CACA42" :
-          d < 0.50 ? "#BABA36" :
-
-          d < 0.6 ? "#FF7777" :
-          d < 0.7 ? "#EE6666" :
-          d < 0.8 ? "#DD5555" :
-          d < 0.9 ? "#CC4444" :
-          d < 1.0 ? "#BB3333" :
-
-          d < 1.1 ? "#E056E0" :
-          d < 1.2 ? "#D045D0" :
-          d < 1.3 ? "#C034C0" :
-          d < 1.4 ? "#B023B0" :
-          d < 1.5 ? "#A012A0" :
-                    "#900190";
-      };
-      pm25Legend = new L.control.IDWLegend(pm25LegendGradients, pm25LegendColorCode, {
-        position: 'bottomright'
-      }).addTo(map);
-      let temperatureLegendGradients = [
-        5, 10, 15, 17, 20, 22,
-        24, 25, 27, 30, 32, 35
-      ],
-      temperatureLengendColorCode = function getColor(d){
-        d = d / 100.0;
-        return d < 0.05 ? "#001f3f":
-          d < 0.10 ? "#0074D9":
-          d < 0.15 ? "#7FDBFF":
-          d < 0.17 ? "#39CCCC":
-          d < 0.20 ? "#3D9970":
-          d < 0.22 ? "#2ECC40":
-          d < 0.24 ? "#01FF70":
-          d < 0.25 ? "#FFDC00":
-          d < 0.27 ? "#FF851B":
-          d < 0.30 ? "#FF4136":
-          d < 0.32 ? "#F012BE":
-          d < 0.35 ? "#B10DC9":
-                     "#85144b"
-      };
-      temperatureLegend = new L.control.IDWLegend(temperatureLegendGradients, temperatureLengendColorCode, {
-        position: 'bottomright'
-      });
-    }
   
   // map tile
-  let Stamen_Terrain = new L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
-    attribution: `<a target="_blank" rel="noopener noreferrer" href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a> | ` + 
+  let attribution = `<a target="_blank" rel="noopener noreferrer" href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a> | ` + 
       `Tiles by <a target="_blank" rel="noopener noreferrer" href="http://stamen.com">Stamen Design</a>, ` +
-      `&copy; <a target="_blank" rel="noopener noreferrer" href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>`,
-    minZoom: 0,
-    maxZoom: 16,
-    ext: 'png'
-  }).addTo(map);
+      `&copy; <a target="_blank" rel="noopener noreferrer" href="http://www.openstreetmap.org/copyright">OSM</a>`;
+  // let Stamen_Terrain = new L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+  //   attribution: attribution,
+  //   minZoom: 0,
+  //   maxZoom: 16,
+  //   ext: 'png'
+  // }).addTo(map);
 
   let urls = [
     "data/data.json",
-    "data/emission_points_polygons.geojson", 
-    "data/pm25Contour_grey_5.geojson",
     "data/pm25Contour_grey_10.geojson", 
     "data/cwb.json"
   ];
@@ -119,13 +44,12 @@
     .then(jsons => {
       // jsons = [
       //    data.json, 
-      //    emission_points_polygons.geojson,
-      //    pm25Contour_grey_5.geojson,
-      //    pm25Contour_grey_10.geojson
+      //    pm25Contour_grey_10.geojson,
+      //    cwb.json
       //  ];
       // airboxPoints = [[lat, lng, pm2.5, temperature, humidity]]
       let airboxPoints = jsons[0].points;
-      let cwbPoints = jsons[4].points;
+      let cwbPoints = jsons[2].points;
       let pm25IDWOptions = {
         // opacity  - the opacity of the IDW layer
         // cellSize - height and width of each cell, 25 by default
@@ -230,37 +154,7 @@
         "CWB Temprature IDW": cwbTempIDWLayer
       };
       // overlayers
-      // L.geoJson doc:
-      // https://leafletjs.com/reference-0.7.7.html#geojson
-      // emission pointe layer
-      emissionLayer = new L.geoJson(jsons[1], {
-        style: function (feature) {
-          return {
-            "color": feature.properties.stroke,
-            "weight": 2,
-            "fillOpacity": feature.properties["fill-opacity"],
-            "fill": true,
-            "fillColor": feature.properties["fill"]
-          };
-        },
-        onEachFeature: function (feature, layer) {
-          layer.bindPopup(feature.properties.title);
-        }
-      });
-      contourInterval5 = new L.geoJson(jsons[2], {
-        style: function (feature) {
-          return {
-            // style option doc:
-            // https://leafletjs.com/reference-1.3.0.html#path
-            "color": feature.properties.stroke,
-            "weight": feature.properties["stroke-width"],
-          };
-        },
-        onEachFeature: function (feature, layer) {
-          layer.bindPopup(feature.properties.title);
-        }
-      });
-      contourInterval10 = new L.geoJson(jsons[3], {
+      contourInterval10 = new L.geoJson(jsons[1], {
         style: function (feature) {
           return {
             "color": feature.properties.stroke,
@@ -271,16 +165,177 @@
           layer.bindPopup(feature.properties.title);
         }
       });
-
+      
       // the diagram must be in the following order
       // to make the emission point layer be the
       // most upper layer in the map
       overlayers = {
-        "Emission Points": emissionLayer,
         // contour layers
-        "PM2.5 Contour Interval: 5": contourInterval5,
         "PM2.5 Contour Interval: 10": contourInterval10,
       };
+
+      // add layer controller to map
+      let layerController = new L.control.layers(baselayers, overlayers, {
+        collapsed: false,
+        autoZIndex: true,
+        position: "topleft"
+      }).addTo(map);
+
+      if(L.Browser.mobile) {
+        // mobile mode
+        // remove zoom control
+        attribution = attribution.replace("Tiles by ", "");
+        layerController.collapse();
+        // add legend check
+        // change gradient when baselayer change
+        map.on("baselayerchange", function(baselayer){
+          let layers = document.getElementsByClassName("leaflet-control-layers-selector");
+          if(baselayer.name === "AirBox PM2.5 IDW") {
+            for (let i = layers.length - 1; i >= 0; i--) {
+              if(layers[i].type === "checkbox") {
+                layers[i].disabled = false;
+              }
+            }
+          } else if(baselayer.name === "AirBox Temprature IDW" || baselayer.name === "CWB Temprature IDW") {
+            for (let i = layers.length - 1; i >= 0; i--) {
+              if(layers[i].type === "checkbox") {
+                layers[i].disabled = true;
+                if(layers[i].checked) {
+                  layers[i].checked = false;
+                }
+              }
+            }
+            for (let key in overlayers) {
+              if(map.hasLayer(overlayers[key])) {
+                map.removeLayer(overlayers[key]);
+              }
+            }
+          }
+        });
+      } else {
+        // PC mode
+        // add legends
+        // IDW legend
+        map.addControl(L.control.zoom({position: "topright"}));
+        let pm25LegendGradients = [
+            0,   1,   3,   6,   8, 
+           10,  12,  14,  16,  18, 
+           20,  25,  30,  35,  40, 
+           50,  60,  70,  80,  90, 
+          100, 110, 120, 130, 140, 150
+        ],
+          pm25LegendColorCode = function(d) {
+            d = d / 100.0;
+            return d < 0.00 ? "#FFFFFF" :
+              d < 0.01 ? "#CCCCFF" :
+              d < 0.03 ? "#BBBBEE" :
+              d < 0.06 ? "#AAAADD" :
+              d < 0.08 ? "#9999CC" :
+              d < 0.10 ? "#8888BB" :
+
+              d < 0.12 ? "#90FA96" :
+              d < 0.14 ? "#82EA64" :
+              d < 0.16 ? "#66DA36" :
+              d < 0.18 ? "#50CA2C" :
+              d < 0.20 ? "#4ABA26" :
+
+              d < 0.25 ? "#FAFA5D" :
+              d < 0.30 ? "#EAEA46" :
+              d < 0.35 ? "#DADA4D" :
+              d < 0.40 ? "#CACA42" :
+              d < 0.50 ? "#BABA36" :
+
+              d < 0.6 ? "#FF7777" :
+              d < 0.7 ? "#EE6666" :
+              d < 0.8 ? "#DD5555" :
+              d < 0.9 ? "#CC4444" :
+              d < 1.0 ? "#BB3333" :
+
+              d < 1.1 ? "#E056E0" :
+              d < 1.2 ? "#D045D0" :
+              d < 1.3 ? "#C034C0" :
+              d < 1.4 ? "#B023B0" :
+              d < 1.5 ? "#A012A0" :
+                        "#900190";
+          };
+          pm25Legend = new L.control.IDWLegend(pm25LegendGradients, pm25LegendColorCode, {
+            position: 'bottomright'
+          }).addTo(map);
+          let temperatureLegendGradients = [
+            5, 10, 15, 17, 20, 22,
+            24, 25, 27, 30, 32, 35
+          ],
+          temperatureLengendColorCode = function getColor(d){
+            d = d / 100.0;
+            return d < 0.05 ? "#001f3f":
+              d < 0.10 ? "#0074D9":
+              d < 0.15 ? "#7FDBFF":
+              d < 0.17 ? "#39CCCC":
+              d < 0.20 ? "#3D9970":
+              d < 0.22 ? "#2ECC40":
+              d < 0.24 ? "#01FF70":
+              d < 0.25 ? "#FFDC00":
+              d < 0.27 ? "#FF851B":
+              d < 0.30 ? "#FF4136":
+              d < 0.32 ? "#F012BE":
+              d < 0.35 ? "#B10DC9":
+                         "#85144b"
+          };
+          temperatureLegend = new L.control.IDWLegend(temperatureLegendGradients, temperatureLengendColorCode, {
+            position: 'bottomright'
+          });
+        // add legend check
+        // change gradient when baselayer change
+        map.on("baselayerchange", function(baselayer) {
+          let layers = document.getElementsByClassName("leaflet-control-layers-selector");
+          if(baselayer.name === "AirBox PM2.5 IDW") {
+            temperatureLegend.remove();
+            pm25Legend.addTo(map);
+            for (let i = layers.length - 1; i >= 0; i--) {
+              if(layers[i].type === "checkbox") {
+                layers[i].disabled = false;
+              }
+            }
+          } else if(baselayer.name === "AirBox Temprature IDW" || baselayer.name === "CWB Temprature IDW") {
+            pm25Legend.remove();
+            temperatureLegend.addTo(map);
+            for (let i = layers.length - 1; i >= 0; i--) {
+              if(layers[i].type === "checkbox") {
+                layers[i].disabled = true;
+                if(layers[i].checked) {
+                  layers[i].checked = false;
+                }
+              }
+            }
+            for (let key in overlayers) {
+              if(map.hasLayer(overlayers[key])) {
+                map.removeLayer(overlayers[key]);
+              }
+            }
+          }
+        });
+      }
+      // disable overlays checkbox when zoomend and the baselayer is temperature idw
+      map.on("zoomend", function(event) {
+        for(let key in baselayers) {
+          if(key.includes("Temprature")) {
+            if(map.hasLayer(baselayers[key])) {
+              let layers = document.getElementsByClassName("leaflet-control-layers-selector");
+              for (let i = layers.length - 1; i >= 0; i--) {
+                if(layers[i].type === "checkbox") {
+                  layers[i].disabled = true;
+                }
+              }
+            }
+          }
+        }
+      })
+      let Stamen_Terrain = new L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
+        attribution: attribution,
+        minZoom: 8,
+        maxZoom: 16,
+        ext: 'png'
+      }).addTo(map);
 
       // add logo container to map
       let logoContainer = new L.control.IDWLogo({
@@ -288,137 +343,40 @@
         "latest-updated-time": jsons[0]['latest-updated-time']
       }).addTo(map);
 
-      // add layer controller to map
-      let layerController = new L.control.layers(baselayers, overlayers, {
-        collapsed: false,
-        autoZIndex: true
-      }).addTo(map);
-
-      if(!L.Browser.mobile) {
-        // PC mode
-        // add legend event
-        // change gradient when baselayer change
-        map.on("baselayerchange", function(baselayer){
-          if(baselayer.name === "AirBox PM2.5 IDW") {
-            temperatureLegend.remove();
-            pm25Legend.addTo(map);
-          } else if(baselayer.name === "AirBox Temprature IDW" || baselayer.name === "CWB Temprature IDW") {
-            pm25Legend.remove();
-            temperatureLegend.addTo(map);
-          }
-        });
-      }
-      let markerCounter = 0;
-      let tooltipFlag = 0;
+      let idwMarker = undefined;
+      let idwDisplay = undefined;
       map.on('click',
         function mapClickListen(event) {
-          if(markerCounter === 2) {
-            return;
-          }
-          markerCounter++;
           let pos = event.latlng;
-          let marker = new L.marker(
-            pos, {
-              draggable: true
-            });
-          marker.on('add dragend', function showIDW(event) {
-            // console.log('marker dragend event');
-            // console.log(event.target._latlng);
-            if(tooltipFlag === 0) {
-              tooltipFlag = 1;
-              this.bindTooltip("double tap to remove the marker.", { permanent: true }).openTooltip();
-              setTimeout(() => {
-                if(this.isTooltipOpen()) this.closeTooltip();
-              }, 3000);
-            }
-            let latlng = event.target._latlng;
-            let checkDist = function(point) {
-              let Coordinate = new L.latLng(point[0], point[1]);
-              let distance = Coordinate.distanceTo(latlng) / 1000.0;
-              return distance < 10.0;
-            };
-            let airboxInCell = airboxPoints.filter(checkDist);
-            let cwbInCell = cwbPoints.filter(checkDist);
-            // Inverse Distance Weighting (IDW)
-            //       Σ (1 / (di ^ p)) * vi
-            // V = -------------------------
-            //          Σ (1 / (di ^ p))
-            // Reference:
-            // http://www.gitta.info/ContiSpatVar/de/html/Interpolatio_learningObject2.xhtml
-            
-            // cellsn = Σ (1 / (di ^ p)) * vi
-            // cellsd = Σ (1 / (di ^ p))
-            let p = 2;
-            let pm25Cellsn = 0.0;
-            let pm25Cellsd = 0.0;
-            let temperatureCellsn = 0.0;
-            let temperatureCellsd = 0.0;
-            let cwbCellsn = 0.0;
-            let cwbCellsd = 0.0;
-            let pm25V = 0.0;
-            let temperatureV = 0.0;
-            let cwbTempV = 0.0;
-            airboxInCell.every(airbox => {
-              // console.log(airbox);
-              let airboxCoordinate = new L.latLng(airbox[0], airbox[1]);
-              // console.log(airboxCoordinate);
-              let distance = airboxCoordinate.distanceTo(latlng) / 1000.0;
-              // An AirBox locates here
-              if(distance === 0) {
-                pm25V = airbox[2];
-                temperatureV = airbox[3];
-                return false;
-              }
-              let distanceRev = 1 / (distance ^ p);
-              if(distanceRev !== Infinity) {
-                if(airbox[2] > 0.0) {
-                  pm25Cellsn += distanceRev * airbox[2];
-                  pm25Cellsd += distanceRev;
-                }
-                if(airbox[3] > 0.0) {
-                  temperatureCellsn += distanceRev * airbox[3];
-                  temperatureCellsd += distanceRev;
-                }
-              }
-              return true;
-            });
-            cwbInCell.every(cwbStation => {
-              let cwbCoordinate = new L.latLng(cwbStation[0], cwbStation[1]);
-              // console.log(airboxCoordinate);
-              let distance = cwbCoordinate.distanceTo(latlng) / 1000.0;
-              // An AirBox locates here
-              if(distance === 0) {
-                cwbTempV = cwbStation[2];
-                return false;
-              }
-              let distanceRev = 1 / (distance ^ p);
-              if(distanceRev !== Infinity) {
-                if(cwbStation[2] > 0.0) {
-                  cwbCellsn += distanceRev * cwbStation[2];
-                  cwbCellsd += distanceRev;
-                }
-              }
-              return true;
-            })
-            pm25V = Math.round(pm25Cellsn / pm25Cellsd * 10) / 10.0;
-            temperatureV = Math.round(temperatureCellsn / temperatureCellsd * 10) / 10.0;
-            cwbTempV = Math.round(cwbCellsn / cwbCellsd * 10) / 10.0;
-            marker.bindPopup(`<p>Coordinate: ${latlng.lat}, ${latlng.lng}<br />
-            AirBox PM2.5: ${pm25V}<br />
-            AirBox Temprature: ${temperatureV}<br />
-            CWB Temprature: ${cwbTempV}</p>`, {
-              "maxWidth": window.innerWidth * 0.4,
-              "autoClose": false,
-              "closeOnClick": false
-            }).openPopup();
-          });
-          marker.on("dblclick", function removeMarker(event) {
-            // this === marker
-            this.closeTooltip();
-            this.removeFrom(map);
-            markerCounter--;
-          });
-          marker.addTo(map);
+          if(idwMarker) {
+            idwDisplay.remove();
+            idwMarker.setLatLng(pos);
+          } else {
+            idwMarker = new L.idwMarker(
+              pos, {
+                range: 10.0,
+                dataOptions: [[2, 0.0], [3, -20.0], [2, -20.0]],
+                p: 2,
+                radius: 5,
+                points: [airboxPoints, airboxPoints, cwbPoints]
+              }).addTo(map);
+          }
+          idwDisplay = L.control.displayIDW(idwMarker.getIDW(), {
+            position: "bottomleft"
+          }).addTo(map);
+          // close button function
+          document.getElementById("idw-display-close-button").onclick = function(event) {
+            // avoid click on the map again
+            map.off('click', mapClickListen);
+            idwMarker.remove();
+            idwDisplay.remove();
+            idwMarker = undefined;
+            idwDisplay = undefined;
+            // turn on the map click function
+            setTimeout(() => {
+              map.on('click', mapClickListen);
+            }, 100);
+          };
         });
     })
     .catch(function(error) {
@@ -426,12 +384,9 @@
     });
 
   // notice setting
-  let currentLanguage = navigator.language;
-  let noticeURL;
-  if(currentLanguage === "zh-TW") {
+  let noticeURL = "notice_en-US.html";
+  if(navigator.language === "zh-TW") {
     noticeURL = "notice_zh-TW.html";
-  } else {
-    noticeURL = "notice_en-US.html"
   }
   let noticeRequest = makeRequest("GET", noticeURL);
   noticeRequest.then(text => {
@@ -443,7 +398,7 @@
     if(L.Browser.mobile) {
       popup.setLatLng([22.77, 120.88]).addTo(map);
     } else {
-      popup.setLatLng([23.77, 120.88]).addTo(map);
+      popup.setLatLng([22.77, 120.88]).addTo(map);
       document.getElementsByClassName("airbox-notice")[0].style.fontSize = "16px";
     }
   }).catch(function(error) {
