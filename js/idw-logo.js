@@ -46,7 +46,7 @@ L.Control.IDWLogo = L.Control.extend({
     return div;
   },
   ifMobile: function () {
-    document.getElementsByClassName("leaflet-control-attribution")[0].innerHTML += ` | <a target="_blank" rel="noopener noreferrer" style="text-decoration: none" href="https://www.iis.sinica.edu.tw/index_zh.html">Sinica</a>
+    document.getElementsByClassName("leaflet-control-attribution")[0].innerHTML += ` | <a target="_blank" rel="noopener noreferrer" style="text-decoration: none" href="https://www.iis.sinica.edu.tw/index_zh.html">IIS AS</a>
              | <a target="_blank" rel="noopener noreferrer" style="text-decoration: none" href="http://lass-net.org/">LASS</a>`
   }
 });

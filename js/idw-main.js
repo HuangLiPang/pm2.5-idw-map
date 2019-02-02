@@ -2,6 +2,7 @@
   "use strict";
   // create a map
   let map = L.map("map", {
+    preferCanvas: true,
     zoomControl: false,
     attributionControl: true,
     maxZoom: 16,
@@ -16,7 +17,6 @@
   let contourInterval10;
   let overlayers;
 
-  let baselayerGroup;
   let pm25Legend, temperatureLegend;
   
   // map tile
@@ -150,8 +150,8 @@
       baselayers = {
         // IDW layers
         "AirBox PM2.5 IDW": pm25IDWLayer.addTo(map),
-        "AirBox Temprature IDW": temperatureIDWLayer,
-        "CWB Temprature IDW": cwbTempIDWLayer
+        "AirBox Temperature IDW": temperatureIDWLayer,
+        "CWB Temperature IDW": cwbTempIDWLayer
       };
       // overlayers
       contourInterval10 = new L.geoJson(jsons[1], {
@@ -166,13 +166,36 @@
         }
       });
       
+      let airboxStations = new L.layerGroup();
+      for (var i = airboxPoints.length - 1; i >= 0; i--) {
+        L.circleMarker(L.latLng(airboxPoints[i][0], airboxPoints[i][1]), {
+          radius: 5,
+          color: "#5D6D7E",
+        }).bindPopup(`PM2.5: ${airboxPoints[i][2]} μg/m<sup>3</sup><br>
+          Temp: ${airboxPoints[i][3]} °C<br>
+          Humidity: ${airboxPoints[i][4]} `).addTo(airboxStations);
+      }
+      let cwbStations = new L.layerGroup();
+      for (var i = cwbPoints.length - 1; i >= 0; i--) {
+        L.circleMarker(L.latLng(cwbPoints[i][0], cwbPoints[i][1]), {
+          radius: 5,
+          color: "#D35400",
+        }).bindPopup(`Temp: ${cwbPoints[i][2]} °C`).addTo(cwbStations);
+      }
+
       // the diagram must be in the following order
       // to make the emission point layer be the
       // most upper layer in the map
       overlayers = {
         // contour layers
         "PM2.5 Contour Interval: 10": contourInterval10,
+        "AirBox Stations": airboxStations,
+        "CWB Stations": cwbStations
       };
+
+      map.on("overlayadd baselayerchange", event => {
+        document.getElementsByClassName("leaflet-idwmap-layer leaflet-layer leaflet-zoom-animated")[0].style.zIndex = "0";
+      });
 
       // add layer controller to map
       let layerController = new L.control.layers(baselayers, overlayers, {
@@ -196,18 +219,14 @@
                 layers[i].disabled = false;
               }
             }
-          } else if(baselayer.name === "AirBox Temprature IDW" || baselayer.name === "CWB Temprature IDW") {
-            for (let i = layers.length - 1; i >= 0; i--) {
-              if(layers[i].type === "checkbox") {
-                layers[i].disabled = true;
-                if(layers[i].checked) {
-                  layers[i].checked = false;
-                }
-              }
+          } else if(baselayer.name === "AirBox Temperature IDW" || baselayer.name === "CWB Temperature IDW") {
+            if(map.hasLayer(overlayers["PM2.5 Contour Interval: 10"])) {
+              map.removeLayer(overlayers["PM2.5 Contour Interval: 10"]);
             }
-            for (let key in overlayers) {
-              if(map.hasLayer(overlayers[key])) {
-                map.removeLayer(overlayers[key]);
+            for (let i = layers.length - 1; i >= 0; i--) {
+              if(layers[i].type === "checkbox" && layers[i].nextSibling.innerText.includes("Contour")) {
+                layers[i].disabled = true;
+                layers[i].checked = false;
               }
             }
           }
@@ -296,35 +315,29 @@
                 layers[i].disabled = false;
               }
             }
-          } else if(baselayer.name === "AirBox Temprature IDW" || baselayer.name === "CWB Temprature IDW") {
+          } else if(baselayer.name === "AirBox Temperature IDW" || baselayer.name === "CWB Temperature IDW") {
             pm25Legend.remove();
             temperatureLegend.addTo(map);
-            for (let i = layers.length - 1; i >= 0; i--) {
-              if(layers[i].type === "checkbox") {
-                layers[i].disabled = true;
-                if(layers[i].checked) {
-                  layers[i].checked = false;
-                }
-              }
+            if(map.hasLayer(overlayers["PM2.5 Contour Interval: 10"])) {
+              map.removeLayer(overlayers["PM2.5 Contour Interval: 10"]);
             }
-            for (let key in overlayers) {
-              if(map.hasLayer(overlayers[key])) {
-                map.removeLayer(overlayers[key]);
+            for (let i = layers.length - 1; i >= 0; i--) {
+              if(layers[i].type === "checkbox" && layers[i].nextSibling.innerText.includes("Contour")) {
+                layers[i].disabled = true;
+                layers[i].checked = false;
               }
             }
           }
         });
       }
-      // disable overlays checkbox when zoomend and the baselayer is temperature idw
+      // disable overlayers checkbox when zoomend and the baselayer is temperature idw
       map.on("zoomend", function(event) {
         for(let key in baselayers) {
-          if(key.includes("Temprature")) {
-            if(map.hasLayer(baselayers[key])) {
-              let layers = document.getElementsByClassName("leaflet-control-layers-selector");
-              for (let i = layers.length - 1; i >= 0; i--) {
-                if(layers[i].type === "checkbox") {
-                  layers[i].disabled = true;
-                }
+          if(key.includes("Temperature") && map.hasLayer(baselayers[key])) {
+            let layers = document.getElementsByClassName("leaflet-control-layers-selector");
+            for (let i = layers.length - 1; i >= 0; i--) {
+              if(layers[i].type === "checkbox" && layers[i].nextSibling.innerText.includes("Contour")) {
+                layers[i].disabled = true;
               }
             }
           }
