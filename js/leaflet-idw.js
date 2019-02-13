@@ -18,6 +18,7 @@
     this._height = canvas.height;
 
     this._max = 1;
+    this._min = 0;
     this._data = [];
   }
 
@@ -68,6 +69,11 @@
         return this;
       },
 
+      min: function(min) {
+        this._min = min;
+        return this;
+      },
+
       add: function(point) {
         this._data.push(point);
         return this;
@@ -107,9 +113,14 @@
 
         canvas.width = 1;
         canvas.height = 256;
-
-        for (var i in grad) {
-          gradient.addColorStop(+i / 2, grad[i]);
+        if(this._min !== 0) {
+          for (var i in grad) {
+            gradient.addColorStop(this._numberLineTranslation(+i) / (this._max - this._min), grad[i]);
+          }
+        } else {
+          for (var i in grad) {
+            gradient.addColorStop(+i / this._max - this._min, grad[i]);
+          }
         }
 
         ctx.fillStyle = gradient;
@@ -128,18 +139,32 @@
 
         ctx.clearRect(0, 0, this._width, this._height);
         // draw a grayscale idwmap by putting a cell at each data point
-        for (var i = 0, len = this._data.length, p; i < len; i++) {
-          p = this._data[i];
-          ctx.globalAlpha = p[2] / this._max;
-          ctx.drawImage(this._cell, p[0] - this._r, p[1] - this._r);
+        if(this._min !== 0) {
+          for (var i = 0, len = this._data.length, p; i < len; i++) {
+            p = this._data[i];
+            if(p[2] < this._min) {
+              // cell not used
+              continue;
+            }
+            ctx.globalAlpha = this._numberLineTranslation(p[2]) / (this._max - this._min);
+            ctx.drawImage(this._cell, p[0] - this._r, p[1] - this._r);
+          }
+        } else {
+          for (var i = 0, len = this._data.length, p; i < len; i++) {
+            p = this._data[i];
+            if(p[2] < this._min) {
+              // cell not used
+              continue;
+            }
+            ctx.globalAlpha = p[2] / this._max;
+            ctx.drawImage(this._cell, p[0] - this._r, p[1] - this._r);
+          }
         }
-
         // colorize the heatmap, using opacity value of each pixel to get the right color from our gradient
         var colored = ctx.getImageData(0, 0, this._width, this._height);
 
         this._colorize(colored.data, this._grad, opacity);
         ctx.putImageData(colored, 0, 0);
-
 
         return this;
       },
@@ -147,12 +172,23 @@
       _colorize: function(pixels, gradient, opacity) {
         for (var i = 0, len = pixels.length, j; i < len; i += 4) {
           j = pixels[i + 3] * 4;
-
+          // skip not used cells
+          if(j === 0) continue;
           pixels[i] = gradient[j];
           pixels[i + 1] = gradient[j + 1];
           pixels[i + 2] = gradient[j + 2];
           pixels[i + 3] = opacity * 256;
         }
+      },
+
+      _numberLineTranslation: function(idwValue) {
+        // if idwValue == 0 will be skip 
+        // so the actual min value on the canvas will be 0.1
+        let returnValue = idwValue - this._min;;
+        if(returnValue === 0) {
+          return 0.1;
+        }
+        return returnValue;
       }
     },
     window.simpleidw = simpleidw;
@@ -251,13 +287,16 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
 
   _updateOptions: function() {
     this._idw.cellSize(this.options.cellSize || this._idw.defaultCellSize);
-
+    if (this.options.maxVal) {
+      this._idw.max(this.options.maxVal);
+    }
+    if (this.options.minVal) {
+      this._idw.min(this.options.minVal);
+    }
     if (this.options.gradient) {
       this._idw.gradient(this.options.gradient);
     }
-    if (this.options.max) {
-      this._idw.max(this.options.max);
-    }
+    
   },
 
   _reset: function() {
@@ -292,9 +331,7 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
       ),
       // exp used for weighting, 1 by default
       // exponential distances of the n data points to the estimated point
-      exp = this.options.exp === undefined ? 1 : this.options.exp,
-      // maximum AQI point values, 1.0 by default
-      max = this.options.max === undefined ? 1 : this.options.max,
+      exp = this.options.exp || 2,
       maxZoom = this.options.maxZoom === undefined ? this._map.getMaxZoom() : this.options.maxZoom,
       cellCen = r / 2,
       // number of cells on the x-axis of the screen
@@ -303,7 +340,11 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
       nCellY = Math.ceil((bounds.max.y - bounds.min.y) / r) + 1,
       numberOfData = this._latlngs.length, 
       // dataType: 2 => pm2.5, 3 => temperature, 4 => humidity
-      dataType = this.options.dataType || 2;
+      dataType = this.options.dataType || 2,
+      // station effective range in km
+      station_range = this.options.station_range || 10,
+      maxVal = this.options.maxVal || 150.0,
+      minVal = this.options.minVal || 0.0;
 
     console.time('process ' + this._latlngs.length);
 
@@ -315,9 +356,7 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
       // km per pixel on x-axis
       offsetX = Math.abs(leftTop.lng - rightBottom.lng) * 111.32 / map.getSize().x,
       // km per pixel on y-axis
-      offsetY = Math.abs(leftTop.lat - rightBottom.lat) * 110.574 / map.getSize().y,
-      // station effective range in km
-      station_range = 10;
+      offsetY = Math.abs(leftTop.lat - rightBottom.lat) * 110.574 / map.getSize().y
 
     // Inverse Distance Weighting (IDW)
     //       Σ (1 / (di ^ p)) * vi
@@ -341,6 +380,13 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
     }
 
     for (var k = 0; k < numberOfData; k++) {
+      // check whether IDW value is valid
+      if(isNaN(this._latlngs[k][dataType])
+        || this._latlngs[k][dataType] > maxVal
+        || this._latlngs[k][dataType] < minVal) {
+        // console.log("malfunction station: ", this._latlngs[k]);
+        continue;
+      }
       // p is the pixel coordinate of _latlngs[k] on the screen
       var p = this._map.latLngToContainerPoint(L.latLng(this._latlngs[k][0], this._latlngs[k][1])),
         // left pixel coordinate of the cell
@@ -359,10 +405,10 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
       y2 = Math.ceil(y2 / r - 0.5);
 
       // check if x1, x2, y1, y2 out of cellsn, cellsd bounds
-      if (x1 < 0.0) {
-        x1 = 0.0;
+      if (x1 < 0) {
+        x1 = 0;
       }
-      if (x2 < 0.0) {
+      if (x2 < 0) {
         continue;
       }
       if (x1 >= nCellX) {
@@ -372,10 +418,10 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
         x2 = nCellX - 1;
       }
 
-      if (y1 < 0.0) {
-        y1 = 0.0;
+      if (y1 < 0) {
+        y1 = 0;
       }
-      if (y2 < 0.0) {
+      if (y2 < 0) {
         continue;
       }
       if (y1 >= nCellY) {
@@ -399,7 +445,7 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
           var p = this._map.latLngToContainerPoint([this._latlngs[k][0], this._latlngs[k][1]]);
 
           // estimated point pixel coordinate
-          var cp = L.point((j * r - cellCen), (i * r - cellCen));
+          var cp = L.point((j * r + cellCen), (i * r + cellCen));
 
           // pixel distance
           var distInPixels = cp.distanceTo(p);
@@ -414,35 +460,17 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
             continue;
           }
 
-          // IDW default value for Taiwan
-          // PM2.5 is 10.0
-          // Temperature is 20.0
-          // Hunidity is 70.0
-          var defaultVal = 0.0;
-          if(dataType === 2) defaultVal = 1.0;
-          else if(dataType === 3) defaultVal = 20.0;
-          else if(dataType === 4) defaultVal = 70.0;
-
           // IDW value
-          var val = defaultVal;
-          if(this._latlngs[k].alt !== undefined) val = this._latlngs[k].alt;
-          else if(this._latlngs[k][dataType] !== undefined) val = +this._latlngs[k][dataType];
-
-          // if the value is less than 0.0,
-          // the sensor is broken
-          // set the value to default value
-          if(dataType === 2 && val < 0.0) val = defaultVal;
-          if(dataType === 3 && (val < -20.0 || val > 50.0)) val = defaultVal;
+          var val = this._latlngs[k][dataType];
 
           if (distInPixels === 0.0) {
             // cell center fills in original value
             cellsn[i][j] = val;
-            cellsd[i][j] = -1.0;
+            cellsd[i][j] = -1;
           } else {
             var distInPixelsExp = Math.pow(distInPixels, exp);
             cellsn[i][j] += (val / distInPixelsExp);
             cellsd[i][j] += (1.0 / distInPixelsExp);
-            //console.log(val);
           }
         }
       }
@@ -455,19 +483,20 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
         }
         var interpolVal = 0.0
         if (cellsd[i][j] === 0.0) {
-          interpolVal = 0.0;
+          // cell not used
+          interpolVal = minVal - 1;
         } else {
           interpolVal = cellsn[i][j] / cellsd[i][j];
         }
         // IDW value
-        var cell = [j * r, i * r, interpolVal];
+        var cell = [
+          Math.round(j * r), 
+          Math.round(i * r), 
+          Math.min(interpolVal, maxVal)
+        ];
 
-        if (cell !== undefined && interpolVal !== 0.0) {
-          data.push([
-            Math.round(cell[0]),
-            Math.round(cell[1]),
-            Math.min(cell[2], max)
-          ]);
+        if (cell !== undefined) {
+          data.push(cell);
         }
       }
     }
