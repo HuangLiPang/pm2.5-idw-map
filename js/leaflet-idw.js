@@ -147,7 +147,7 @@
               continue;
             }
             ctx.globalAlpha = this._numberLineTranslation(p[2]) / (this._max - this._min);
-            ctx.drawImage(this._cell, p[0] - this._r, p[1] - this._r);
+            ctx.drawImage(this._cell, p[0], p[1]);
           }
         } else {
           for (var i = 0, len = this._data.length, p; i < len; i++) {
