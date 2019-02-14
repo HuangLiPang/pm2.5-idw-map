@@ -157,7 +157,7 @@
               continue;
             }
             ctx.globalAlpha = p[2] / this._max;
-            ctx.drawImage(this._cell, p[0] - this._r, p[1] - this._r);
+            ctx.drawImage(this._cell, p[0], p[1]);
           }
         }
         // colorize the heatmap, using opacity value of each pixel to get the right color from our gradient
