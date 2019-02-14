@@ -14,13 +14,14 @@
     .catch(err => console.log(err));
 
   // create a map
-  let map = L.map("map", {
+  let mapOptions = {
     preferCanvas: true,
     zoomControl: false,
     attributionControl: true,
     maxZoom: 16,
-    minZoom: 8
-  }).setView([23.77, 120.88], 8);
+    minZoom: 4
+  };
+  let map = L.map("map", mapOptions).setView([23.77, 120.88], 8);
 
   // baselayers
   let pm25IDWLayer, temperatureIDWLayer, cwbTempIDWLayer;
@@ -88,12 +89,6 @@
   let attribution = `<a target="_blank" rel="noopener noreferrer" href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a> | ` + 
       `Tiles by <a target="_blank" rel="noopener noreferrer" href="http://stamen.com">Stamen Design</a>, ` +
       `&copy; <a target="_blank" rel="noopener noreferrer" href="http://www.openstreetmap.org/copyright">OSM</a>`;
-  // let Stamen_Terrain = new L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
-  //   attribution: attribution,
-  //   minZoom: 0,
-  //   maxZoom: 16,
-  //   ext: 'png'
-  // }).addTo(map);
 
   let urls = [
     "data/data.json",
@@ -122,8 +117,8 @@
         // max      - maximum point values, 1.0 by default
         // gradient - color gradient config, e.g. {0.4: 'blue', 0.65: 'lime', 1: 'red'}
         opacity: 0.5,
-        maxZoom: 16,
-        minZoom: 8,
+        maxZoom: mapOptions.maxZoom,
+        minZoom: mapOptions.minZoom,
         cellSize: 5,
         exp: 2,
         gradient: pm25Gradient,
@@ -134,8 +129,8 @@
       };
       let temperatureIDWOptions = {
         opacity: 0.5,
-        maxZoom: 16,
-        minZoom: 8,
+        maxZoom: mapOptions.maxZoo,
+        minZoom: mapOptions.minZoom,
         cellSize: 5,
         exp: 2,
         gradient: tempGradient,
@@ -146,8 +141,8 @@
       };
       let cwbTemperatureIDWOptions = {
         opacity: 0.5,
-        maxZoom: 16,
-        minZoom: 8,
+        maxZoom: mapOptions.maxZoom,
+        minZoom: mapOptions.minZoom,
         cellSize: 5,
         exp: 2,
         gradient: tempGradient,
@@ -298,8 +293,8 @@
       })
       let Stamen_Terrain = new L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}', {
         attribution: attribution,
-        minZoom: 8,
-        maxZoom: 16,
+        minZoom: mapOptions.minZoom,
+        maxZoom: mapOptions.maxZoom,
         ext: 'png',
         opacity: 0.8
       }).addTo(map);
