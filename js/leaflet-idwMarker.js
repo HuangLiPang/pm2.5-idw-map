@@ -2,6 +2,7 @@
 L.IdwMarker = L.CircleMarker.extend({
   options: {
     range: 10.0,
+    // [[dataType, min]]
     dataOptions: [[2, 0.0]],
     p: 2
     // points: [[lat, lon, value]]

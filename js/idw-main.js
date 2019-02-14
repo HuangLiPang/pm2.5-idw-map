@@ -1,5 +1,18 @@
 (function(window) {
   "use strict";
+  // ga
+  makeRequest("GET", "js/gaid.js")
+    .then(id => {
+      let script = document.createElement("script");
+      script.setAttribute("src", `https://www.googletagmanager.com/gtag/js?id=${id}`);
+      script.setAttribute("async", '');
+      document.body.appendChild(script);
+      let gtag = document.createElement("script");
+      gtag.innerText = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', "${id}");`;
+      document.body.appendChild(gtag);
+    })
+    .catch(err => console.log(err));
+
   // create a map
   let map = L.map("map", {
     preferCanvas: true,
@@ -11,6 +24,58 @@
 
   // baselayers
   let pm25IDWLayer, temperatureIDWLayer, cwbTempIDWLayer;
+  let pm25Gradient = {
+    0: "#F9F9F9",
+    1: "#CCCCFF",
+    3: "#BBBBEE",
+    6: "#AAAADD",
+    8: "#9999CC",
+    10: "#8888BB",
+
+    12: "#90FA96",
+    14: "#82EA64",
+    16: "#66DA36",
+    18: "#50CA2C",
+    20: "#4ABA26",
+
+    25: "#FAFA5D",
+    30: "#EAEA46",
+    35: "#DADA4D",
+    40: "#CACA42",
+    50: "#BABA36",
+
+    60: "#FF7777",
+    70: "#EE6666",
+    80: "#DD5555",
+    90: "#CC4444",
+    100: "#BB3333",
+
+    110: "#E046E0",
+    120: "#D03DD0",
+    130: "#C032C0",
+    140: "#B026B0",
+    150: "#A01DA0"
+  },
+    tempGradient = {
+    // "-20": "#F9F9F9",
+    "-10": "#e5e5e5",
+    0: "#cccccc",
+    5: "#0074D9",
+    10: "#7fb9ec",
+    15: "#7FDBFF",
+    17: "#39CCCC",
+    20: "#3D9970",
+    22: "#2ECC40",
+    24: "#01FF70",
+    25: "#FFDC00",
+    27: "#FF851B",
+    30: "#FF4136",
+    32: "#F012BE",
+    35: "#B10DC9",
+    40: "#85144b",
+    50: "#4f0c2d",
+    60: "#270616"
+  };
   let baselayers;
 
   // overlayers
@@ -61,40 +126,11 @@
         minZoom: 8,
         cellSize: 5,
         exp: 2,
-        max: 200,
-        gradient: {
-          0.001: "#FFFFFF",
-          0.01: "#CCCCFF",
-          0.03: "#BBBBEE",
-          0.06: "#AAAADD",
-          0.08: "#9999CC",
-          0.10: "#8888BB",
-
-          0.12: "#90FA96",
-          0.14: "#82EA64",
-          0.16: "#66DA36",
-          0.18: "#50CA2C",
-          0.20: "#4ABA26",
-
-          0.25: "#FAFA5D",
-          0.30: "#EAEA46",
-          0.35: "#DADA4D",
-          0.40: "#CACA42",
-          0.50: "#BABA36",
-
-          0.6: "#FF7777",
-          0.7: "#EE6666",
-          0.8: "#DD5555",
-          0.9: "#CC4444",
-          1.0: "#BB3333",
-
-          1.1: "#E046E0",
-          1.2: "#D03DD0",
-          1.3: "#C032C0",
-          1.4: "#B026B0",
-          1.5: "#A01DA0"
-        },
-        dataType: 2
+        gradient: pm25Gradient,
+        dataType: 2,
+        station_range: 10,
+        minVal: 0.0,
+        maxVal: 150.0
       };
       let temperatureIDWOptions = {
         opacity: 0.5,
@@ -102,23 +138,11 @@
         minZoom: 8,
         cellSize: 5,
         exp: 2,
-        max: 200,
-        gradient: {
-          0.001: "#FFFFFF",
-          0.05: "#001f3f",
-          0.10: "#0074D9",
-          0.15: "#7FDBFF",
-          0.17: "#39CCCC",
-          0.20: "#3D9970",
-          0.22: "#2ECC40",
-          0.24: "#01FF70",
-          0.25: "#FFDC00",
-          0.27: "#FF851B",
-          0.30: "#FF4136",
-          0.32: "#F012BE",
-          0.35: "#B10DC9"
-        },
-        dataType: 3
+        gradient: tempGradient,
+        dataType: 3,
+        station_range: 10,
+        minVal: -10.0,
+        maxVal: 60.0
       };
       let cwbTemperatureIDWOptions = {
         opacity: 0.5,
@@ -126,23 +150,11 @@
         minZoom: 8,
         cellSize: 5,
         exp: 2,
-        max: 200,
-        gradient: {
-          0.001: "#FFFFFF",
-          0.05: "#001f3f",
-          0.10: "#0074D9",
-          0.15: "#7FDBFF",
-          0.17: "#39CCCC",
-          0.20: "#3D9970",
-          0.22: "#2ECC40",
-          0.24: "#01FF70",
-          0.25: "#FFDC00",
-          0.27: "#FF851B",
-          0.30: "#FF4136",
-          0.32: "#F012BE",
-          0.35: "#B10DC9"
-        },
-        dataType: 2
+        gradient: tempGradient,
+        dataType: 2,
+        station_range: 10,
+        minVal: -10.0,
+        maxVal: 60.0
       }
       pm25IDWLayer = new L.idwLayer(airboxPoints, pm25IDWOptions);
       temperatureIDWLayer = new L.idwLayer(airboxPoints, temperatureIDWOptions);
@@ -236,73 +248,14 @@
         // add legends
         // IDW legend
         map.addControl(L.control.zoom({position: "topright"}));
-        let pm25LegendGradients = [
-            0,   1,   3,   6,   8, 
-           10,  12,  14,  16,  18, 
-           20,  25,  30,  35,  40, 
-           50,  60,  70,  80,  90, 
-          100, 110, 120, 130, 140, 150
-        ],
-          pm25LegendColorCode = function(d) {
-            d = d / 100.0;
-            return d < 0.00 ? "#FFFFFF" :
-              d < 0.01 ? "#CCCCFF" :
-              d < 0.03 ? "#BBBBEE" :
-              d < 0.06 ? "#AAAADD" :
-              d < 0.08 ? "#9999CC" :
-              d < 0.10 ? "#8888BB" :
-
-              d < 0.12 ? "#90FA96" :
-              d < 0.14 ? "#82EA64" :
-              d < 0.16 ? "#66DA36" :
-              d < 0.18 ? "#50CA2C" :
-              d < 0.20 ? "#4ABA26" :
-
-              d < 0.25 ? "#FAFA5D" :
-              d < 0.30 ? "#EAEA46" :
-              d < 0.35 ? "#DADA4D" :
-              d < 0.40 ? "#CACA42" :
-              d < 0.50 ? "#BABA36" :
-
-              d < 0.6 ? "#FF7777" :
-              d < 0.7 ? "#EE6666" :
-              d < 0.8 ? "#DD5555" :
-              d < 0.9 ? "#CC4444" :
-              d < 1.0 ? "#BB3333" :
-
-              d < 1.1 ? "#E056E0" :
-              d < 1.2 ? "#D045D0" :
-              d < 1.3 ? "#C034C0" :
-              d < 1.4 ? "#B023B0" :
-              d < 1.5 ? "#A012A0" :
-                        "#900190";
-          };
-          pm25Legend = new L.control.IDWLegend(pm25LegendGradients, pm25LegendColorCode, {
-            position: 'bottomright'
-          }).addTo(map);
-          let temperatureLegendGradients = [
-            5, 10, 15, 17, 20, 22,
-            24, 25, 27, 30, 32, 35
-          ],
-          temperatureLengendColorCode = function getColor(d){
-            d = d / 100.0;
-            return d < 0.05 ? "#001f3f":
-              d < 0.10 ? "#0074D9":
-              d < 0.15 ? "#7FDBFF":
-              d < 0.17 ? "#39CCCC":
-              d < 0.20 ? "#3D9970":
-              d < 0.22 ? "#2ECC40":
-              d < 0.24 ? "#01FF70":
-              d < 0.25 ? "#FFDC00":
-              d < 0.27 ? "#FF851B":
-              d < 0.30 ? "#FF4136":
-              d < 0.32 ? "#F012BE":
-              d < 0.35 ? "#B10DC9":
-                         "#85144b"
-          };
-          temperatureLegend = new L.control.IDWLegend(temperatureLegendGradients, temperatureLengendColorCode, {
-            position: 'bottomright'
-          });
+        pm25Legend = new L.control.IDWLegend(pm25Gradient, {
+          position: 'bottomright',
+          unit: "Unit: μg/m<sup>3</sup>"
+        }).addTo(map);
+        temperatureLegend = new L.control.IDWLegend(tempGradient, {
+          position: 'bottomright',
+          unit: "Unit: °C"
+        });
         // add legend check
         // change gradient when baselayer change
         map.on("baselayerchange", function(baselayer) {
@@ -347,7 +300,8 @@
         attribution: attribution,
         minZoom: 8,
         maxZoom: 16,
-        ext: 'png'
+        ext: 'png',
+        opacity: 0.8
       }).addTo(map);
 
       // add logo container to map
@@ -428,14 +382,19 @@
         if (this.status >= 200 && this.status < 300) {
           resolve(xhr.response);
         } else {
+          // If it fails, reject the promise with a error message
           reject({
+            url: url,
             status: this.status,
             statusText: xhr.statusText
           });
         }
       };
       xhr.onerror = function() {
+        // Also deal with the case when the entire request fails to begin with
+        // This is probably a network error, so reject the promise with an appropriate message
         reject({
+          url: url,
           status: this.status,
           statusText: xhr.statusText
         });
