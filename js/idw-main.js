@@ -1,5 +1,18 @@
 (function(window) {
   "use strict";
+  // ga
+  makeRequest("GET", "js/gaid.js")
+    .then(id => {
+      let script = document.createElement("script");
+      script.setAttribute("src", `https://www.googletagmanager.com/gtag/js?id=${id}`);
+      script.setAttribute("async", '');
+      document.body.appendChild(script);
+      let gtag = document.createElement("script");
+      gtag.innerText = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', "${id}");`;
+      document.body.appendChild(gtag);
+    })
+    .catch(err => console.log(err));
+
   // create a map
   let map = L.map("map", {
     preferCanvas: true,
@@ -369,14 +382,19 @@
         if (this.status >= 200 && this.status < 300) {
           resolve(xhr.response);
         } else {
+          // If it fails, reject the promise with a error message
           reject({
+            url: url,
             status: this.status,
             statusText: xhr.statusText
           });
         }
       };
       xhr.onerror = function() {
+        // Also deal with the case when the entire request fails to begin with
+        // This is probably a network error, so reject the promise with an appropriate message
         reject({
+          url: url,
           status: this.status,
           statusText: xhr.statusText
         });

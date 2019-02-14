@@ -16,6 +16,7 @@ log
 .python-version
 config.*
 *.pyc
+gaid.js
 
 # cache
 __pycache__
