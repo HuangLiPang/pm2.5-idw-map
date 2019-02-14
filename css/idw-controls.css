@@ -24,6 +24,11 @@
   width: 120px;
 } 
 
+.idw-display a.leaflet-popup-close-button {
+  font-size: 1.5em;
+  padding: 4px 4px 0 0 ;
+}
+
 .idw-logo table {
   font-size: 1.4em;
 }
@@ -47,4 +52,23 @@
 
 .idw-legend tr:nth-child(2) {
   text-align: right;
+}
+
+.airbox-notice h2 {
+  margin: 0px;
+  text-align: center;
+}
+
+.airbox-notice ol {
+  padding-inline-start: 0.75em;
 } 
+
+.airbox-notice a.leaflet-popup-close-button {
+  font-size: 2em;
+  padding: 10px 10px 0 0 ;
+}
+
+.airbox-notice a.leaflet-popup-close-button {
+  font-size: 2em;
+  padding: 10px 10px 0 0 ;
+}
