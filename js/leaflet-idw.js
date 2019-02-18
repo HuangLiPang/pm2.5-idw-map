@@ -185,8 +185,8 @@
         // if idwValue == 0 will be skip 
         // so the actual min value on the canvas will be 0.1
         let returnValue = idwValue - this._min;;
-        if(returnValue === 0) {
-          return 0.1;
+        if(returnValue < 1.0) {
+          return 0.5;
         }
         return returnValue;
       }
@@ -354,9 +354,9 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
       // right bottom lat lon coordinate of the screen
       rightBottom = map.containerPointToLatLng([map.getSize().x, map.getSize().y]),
       // km per pixel on x-axis
-      offsetX = Math.abs(leftTop.lng - rightBottom.lng) * 111.32 / map.getSize().x,
+      offsetX = Math.abs(leftTop.lng - rightBottom.lng) * 104.64 / map.getSize().x,
       // km per pixel on y-axis
-      offsetY = Math.abs(leftTop.lat - rightBottom.lat) * 110.574 / map.getSize().y
+      offsetY = Math.abs(leftTop.lat - rightBottom.lat) * 110.69 / map.getSize().y
 
     // Inverse Distance Weighting (IDW)
     //       Σ (1 / (di ^ p)) * vi
