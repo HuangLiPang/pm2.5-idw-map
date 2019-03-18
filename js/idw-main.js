@@ -24,7 +24,7 @@
   let map = L.map("map", mapOptions).setView([23.77, 120.88], 8);
 
   // baselayers
-  let pm25IDWLayer, temperatureIDWLayer, cwbTempIDWLayer;
+  let pm25IDWLayer, temperatureIDWLayer, cwbTempIDWLayer, epaPm25IDWLayer;
   let pm25Gradient = {
     0: "#F9F9F9",
     1: "#CCCCFF",
@@ -93,7 +93,8 @@
   let urls = [
     "data/data.json",
     "data/pm25Contour_grey_10.geojson", 
-    "data/cwb.json"
+    "data/cwb.json",
+    "data/epa.json"
   ];
 
   Promise.all(urls.map(url => makeRequest('GET', url)))
@@ -110,6 +111,7 @@
       // airboxPoints = [[lat, lng, pm2.5, temperature, humidity]]
       let airboxPoints = jsons[0].points;
       let cwbPoints = jsons[2].points;
+      let epaPoints = jsons[3].points;
       let pm25IDWOptions = {
         // opacity  - the opacity of the IDW layer
         // cellSize - height and width of each cell, 25 by default
@@ -150,15 +152,29 @@
         station_range: 10,
         minVal: -10.0,
         maxVal: 60.0
-      }
+      };
+      let epaPm25IDWOptions = {
+        opacity: 0.5,
+        maxZoom: mapOptions.maxZoom,
+        minZoom: mapOptions.minZoom,
+        cellSize: 5,
+        exp: 2,
+        gradient: pm25Gradient,
+        dataType: 2,
+        station_range: 10,
+        minVal: 0.0,
+        maxVal: 150.0
+      };
       pm25IDWLayer = new L.idwLayer(airboxPoints, pm25IDWOptions);
       temperatureIDWLayer = new L.idwLayer(airboxPoints, temperatureIDWOptions);
       cwbTempIDWLayer = new L.idwLayer(cwbPoints, cwbTemperatureIDWOptions);
+      epaPm25IDWLayer = new L.idwLayer(epaPoints, epaPm25IDWOptions);
       baselayers = {
         // IDW layers
         "AirBox PM2.5 IDW": pm25IDWLayer.addTo(map),
         "AirBox Temperature IDW": temperatureIDWLayer,
-        "CWB Temperature IDW": cwbTempIDWLayer
+        "CWB Temperature IDW": cwbTempIDWLayer,
+        "EPA PM2.5 IDW": epaPm25IDWLayer,
       };
       // overlayers
       contourInterval10 = new L.geoJson(jsons[1], {
@@ -189,7 +205,13 @@
           color: "#D35400",
         }).bindPopup(`Temp: ${cwbPoints[i][2]} °C`).addTo(cwbStations);
       }
-
+      let epaStations = new L.layerGroup();
+      for (var i = epaPoints.length - 1; i >= 0; i--) {
+        L.circleMarker(L.latLng(epaPoints[i][0], epaPoints[i][1]), {
+          radius: 5,
+          color: "#0A1CF9",
+        }).bindPopup(`PM2.5: ${epaPoints[i][2]} μg/m<sup>3</sup><br>`).addTo(epaStations);
+      }
       // the diagram must be in the following order
       // to make the emission point layer be the
       // most upper layer in the map
@@ -197,7 +219,8 @@
         // contour layers
         "PM2.5 Contour Interval: 10": contourInterval10,
         "AirBox Stations": airboxStations,
-        "CWB Stations": cwbStations
+        "CWB Stations": cwbStations,
+        "EPA Stations": epaStations
       };
 
       map.on("overlayadd baselayerchange", event => {
@@ -220,7 +243,7 @@
         // change gradient when baselayer change
         map.on("baselayerchange", function(baselayer){
           let layers = document.getElementsByClassName("leaflet-control-layers-selector");
-          if(baselayer.name === "AirBox PM2.5 IDW") {
+          if(baselayer.name === "AirBox PM2.5 IDW" || baselayer.name === "EPA PM2.5 IDW") {
             for (let i = layers.length - 1; i >= 0; i--) {
               if(layers[i].type === "checkbox") {
                 layers[i].disabled = false;
@@ -255,7 +278,7 @@
         // change gradient when baselayer change
         map.on("baselayerchange", function(baselayer) {
           let layers = document.getElementsByClassName("leaflet-control-layers-selector");
-          if(baselayer.name === "AirBox PM2.5 IDW") {
+          if(baselayer.name === "AirBox PM2.5 IDW" || baselayer.name === "EPA PM2.5 IDW") {
             temperatureLegend.remove();
             pm25Legend.addTo(map);
             for (let i = layers.length - 1; i >= 0; i--) {
@@ -317,10 +340,10 @@
             idwMarker = new L.idwMarker(
               pos, {
                 range: 10.0,
-                dataOptions: [[2, 0.0], [3, -20.0], [2, -20.0]],
+                dataOptions: [[2, 0.0], [3, -20.0], [2, -20.0], [2, 0.0]],
                 p: 2,
                 radius: 5,
-                points: [airboxPoints, airboxPoints, cwbPoints]
+                points: [airboxPoints, airboxPoints, cwbPoints, epaPoints]
               }).addTo(map);
           }
           idwDisplay = L.control.displayIDW(idwMarker.getIDW(), {
