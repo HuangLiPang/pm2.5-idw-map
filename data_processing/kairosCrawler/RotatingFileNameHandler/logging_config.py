@@ -26,7 +26,7 @@ LOGGING = {
     },
     "complete": {
       "format": "%(asctime)s - PID: %(process)d"\
-            " - %(levelname)s - %(filename)s - %(message)s",
+            " - %(levelname)s - %(filename)s - %(lineno)d - %(message)s",
       "datefmt": "%Y-%m-%d %I:%M:%S %p"
     },
     "utc": {
