@@ -24,6 +24,10 @@ L.Control.DisplayIDW = L.Control.extend({
             <td>CWB Temp: </td>
             <td>${this.values[3]} °C</td>
           </tr>
+          <tr>
+            <td>EPA PM2.5: </td>
+            <td>${this.values[4]} μg/m<sup>3</sup></td>
+          </tr>
         </table>
       </div>
       <div>

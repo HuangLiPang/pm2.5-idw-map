@@ -34,7 +34,7 @@ class RotatingFileNameHandler(logging.handlers.RotatingFileHandler):
                 logging.error(err)
                 sys.exit(0)
         # set filename by the name of scripts
-        logPath = logPath + filename.split('/')[-1].replace(".py", '.log')
+        logPath = logPath + '/' + filename.split('/')[-1].replace(".py", ".log")
 
         # please set the maxBytes and backupCount by yourself
         # it will backup three files and delete the oldest one when create a new one

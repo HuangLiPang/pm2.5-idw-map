@@ -27,13 +27,14 @@ from KairosDBWorker import KairosDBWorker
 KairosDB_URL = config.KairosDB["URL"]
 KairosDB_USER = config.KairosDB["USER"]
 KairosDB_PASSWORD = config.KairosDB["PASSWORD"]
-KairosDB_FilePath = config.KairosDB["FilePath"]
+KairosDB_FilePath = config.KairosDB["FilePath"] + "/epa.json"
 KairosDB_LogPath = config.KairosDB["LogPath"]
 
 def findInfo(reg, source):
   result = re.search(reg, source)
+  if(result == None): return None
   result = result.group(0)
-  result = float(result.split("=")[1])
+  result = float(result.split("=")[-1])
   return result
 
 # load config file
@@ -55,12 +56,12 @@ option = {
   },
   "metrics": [
     {
-      "name": "CWB.AllData"
+      "name": "EPA.AllData"
     }
   ]
 }
-stationIds = worker.queryWithPost("/query/tags", option)["queries"][0]["results"][0]["tags"]["stationId"]
-logger.info("query tags in CWB.AllData, tags length: " + str(len(stationIds)))
+stationIds = worker.queryWithPost("/query/tags", option)["queries"][0]["results"][0]["tags"]["device_id"]
+logger.info("query tags in EPA.AllData, tags length: " + str(len(stationIds)))
 
 option = {
   "start_relative": {
@@ -70,9 +71,9 @@ option = {
   "time_zone": "Asia/Taipei",
   "metrics": [
     {
-      "name": "CWB.AllData",
+      "name": "EPA.AllData",
       "tags": {
-        "stationId": ""
+        "device_id": ""
       },
       "limit": 30,
       "aggregators": [
@@ -91,7 +92,7 @@ option = {
 
 tempData = []
 for stationId in stationIds:
-  option["metrics"][0]["tags"]["stationId"] = stationId
+  option["metrics"][0]["tags"]["device_id"] = stationId
   try:
     stationJson = worker.queryWithPost("/query", option)
     # check values 
@@ -104,22 +105,22 @@ for stationId in stationIds:
     stationStatus = stationJson["queries"][0]["results"][0]["values"][-1][1]
     stationStatus = stationStatus.encode("utf-8")
 
-    lat = findInfo(r"lat_wgs84=\d+.\d+", stationStatus)
-    lon = findInfo(r"lon_wgs84=\d+.\d+", stationStatus)
-    temp = findInfo(r"TEMP=\d+.\d+|TEMP=-\d+|TEMP=-\d+.\d+", stationStatus)
+    lat = findInfo(r"Latitude=\d+\.\d+", stationStatus)
+    lon = findInfo(r"Longitude=\d+\.\d+", stationStatus)
+    pm25 = findInfo(r"PM2_5=-?\d+\.?\d?", stationStatus)
     # check temperature
-    if temp == -99:
-      raise Exception("TEMP = -99")
-    tempData.append([lat, lon, temp])
+    if pm25 == None:
+      raise Exception("No PM2_5 value")
+    tempData.append([lat, lon, pm25])
   except Exception as err:
     logger.error("station id: " + stationId)
     logger.error(err)
 
 logger.info("query complete, tempData length: " + str(len(tempData)))
 
-cwb = {
-  "latest-updated-time": strftime("%Y-%m-%dT%H:%M:%SZ", gmtime()), 
+epa = {
+  "latest-updated-time": strftime("%Y-%m-%dT%H:00:00Z", gmtime()), 
   "points": tempData
 }
 with open(KairosDB_FilePath, 'w') as outfile:  
-  json.dump(cwb, outfile)
+  json.dump(epa, outfile)
