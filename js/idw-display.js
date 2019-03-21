@@ -29,7 +29,7 @@ L.Control.DisplayIDW = L.Control.extend({
             <td>${this.values[4]} μg/m<sup>3</sup></td>
           </tr>
           <tr>
-            <td>Calibration PM2.5: </td>
+            <td>Calibrated AirBox PM2.5: </td>
             <td>${this.values[5]} μg/m<sup>3</sup></td>
           </tr>
         </table>

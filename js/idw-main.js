@@ -187,11 +187,11 @@
       calPm25IDWLayer = new L.idwLayer(calPoints, calPm25IDWOptions);
       baselayers = {
         // IDW layers
-        "AirBox PM2.5 IDW": pm25IDWLayer.addTo(map),
-        "AirBox Temperature IDW": temperatureIDWLayer,
-        "CWB Temperature IDW": cwbTempIDWLayer,
-        "EPA PM2.5 IDW": epaPm25IDWLayer,
-        "Calibration PM2.5 IDW": calPm25IDWLayer,
+        "AirBox PM2.5": pm25IDWLayer.addTo(map),
+        "AirBox Temperature": temperatureIDWLayer,
+        "CWB Temperature": cwbTempIDWLayer,
+        "EPA PM2.5": epaPm25IDWLayer,
+        "Calibrated AirBox PM2.5": calPm25IDWLayer,
       };
       // overlayers
       contourInterval10 = new L.geoJson(jsons[1], {
@@ -245,7 +245,7 @@
         "AirBox Stations": airboxStations,
         "CWB Stations": cwbStations,
         "EPA Stations": epaStations,
-        "Calibration Stations": calStations
+        "Calibrated AirBox Stations": calStations
       };
 
       map.on("overlayadd baselayerchange", event => {
@@ -274,7 +274,7 @@
                 layers[i].disabled = false;
               }
             }
-          } else if(baselayer.name === "AirBox Temperature IDW" || baselayer.name === "CWB Temperature IDW") {
+          } else if(baselayer.name.includes("Temperature")) {
             if(map.hasLayer(overlayers["PM2.5 Contour Interval: 10"])) {
               map.removeLayer(overlayers["PM2.5 Contour Interval: 10"]);
             }
@@ -311,7 +311,7 @@
                 layers[i].disabled = false;
               }
             }
-          } else if(baselayer.name === "AirBox Temperature IDW" || baselayer.name === "CWB Temperature IDW") {
+          } else if(baselayer.name.includes("Temperature")) {
             pm25Legend.remove();
             temperatureLegend.addTo(map);
             if(map.hasLayer(overlayers["PM2.5 Contour Interval: 10"])) {
