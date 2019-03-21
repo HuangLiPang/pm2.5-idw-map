@@ -10,17 +10,16 @@
     LASS calibration api crawler
 """
 
-from requests import get
 from time import gmtime, strftime
-from json import dump
+import json
 import logging
 import logging.config
 import RotatingFileNameHandler.logging_config as logging_config
 from RotatingFileNameHandler.RotatingFileNameHandler import RotatingFileNameHandler
 import config
 
-URL = config.Calibration["URL"]
-FilePath = config.Calibration["FilePath"]
+InputFilePath = config.Calibration["InputFilePath"]
+OutputFilePath = config.Calibration["OutputFilePath"]
 LogPath = config.Calibration["LogPath"]
 
 # load config file
@@ -31,13 +30,15 @@ logger = logging.getLogger()
 logger.addHandler(RotatingFileNameHandler(__file__, LogPath, maxBytes=1024000, backupCount=5))
 
 try:
-  response = get(URL)
-  logger.info("get calibration data")
-  response = response.json()
 
-  response = response["feeds"]
+  lastAllAirbox = None
+  with open(InputFilePath) as infile:
+    lastAllAirbox = json.load(infile)
+  logger.info("get calibration data")
+
+  lastAllAirbox = lastAllAirbox["feeds"]
   tempData = []
-  for station in response:
+  for station in lastAllAirbox:
     if "c_d0" in station:
       tempData.append([station["gps_lat"], station["gps_lon"], station["c_d0"]])
 
@@ -47,7 +48,7 @@ try:
     "points": tempData
   }
 
-  with open(FilePath, 'w') as outfile:  
-    dump(calibration, outfile)
+  with open(OutputFilePath, 'w') as outfile:  
+    json.dump(calibration, outfile)
 except Exception as err:
       logger.error(err)
