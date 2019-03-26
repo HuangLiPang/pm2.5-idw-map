@@ -208,12 +208,24 @@
       
       let airboxStations = new L.layerGroup();
       for (var i = airboxPoints.length - 1; i >= 0; i--) {
+        // find calibrated airbox
+        let calStation = calPoints.find(calPoint => {
+          return airboxPoints[i][0].toFixed(3) == calPoint[0].toFixed(3) &&
+             airboxPoints[i][1].toFixed(3) == calPoint[1].toFixed(3);
+        });
+        let color = "#5D6D7E";
+        let popup = `PM2.5: ${airboxPoints[i][2]} μg/m<sup>3</sup><br>
+          Temp: ${airboxPoints[i][3]} °C<br>
+          Humidity: ${airboxPoints[i][4]}`;
+        if(calStation !== undefined) {
+          color = "#1B4F72";
+          popup += `<br>
+            Calibrated PM2.5: ${calStation[2]}`;
+        }
         L.circleMarker(L.latLng(airboxPoints[i][0], airboxPoints[i][1]), {
           radius: 5,
-          color: "#5D6D7E",
-        }).bindPopup(`PM2.5: ${airboxPoints[i][2]} μg/m<sup>3</sup><br>
-          Temp: ${airboxPoints[i][3]} °C<br>
-          Humidity: ${airboxPoints[i][4]} `).addTo(airboxStations);
+          color: color,
+        }).bindPopup(popup).addTo(airboxStations);
       }
       let cwbStations = new L.layerGroup();
       for (var i = cwbPoints.length - 1; i >= 0; i--) {
@@ -229,13 +241,6 @@
           color: "#0A1CF9",
         }).bindPopup(`PM2.5: ${epaPoints[i][2]} μg/m<sup>3</sup><br>`).addTo(epaStations);
       }
-      let calStations = new L.layerGroup();
-      for (var i = calPoints.length - 1; i >= 0; i--) {
-        L.circleMarker(L.latLng(calPoints[i][0], calPoints[i][1]), {
-          radius: 5,
-          color: "#1B4F72",
-        }).bindPopup(`PM2.5: ${calPoints[i][2]} μg/m<sup>3</sup><br>`).addTo(calStations);
-      }
       // the diagram must be in the following order
       // to make the emission point layer be the
       // most upper layer in the map
@@ -244,8 +249,7 @@
         "PM2.5 Contour Interval: 10": contourInterval10,
         "AirBox Stations": airboxStations,
         "CWB Stations": cwbStations,
-        "EPA Stations": epaStations,
-        "Calibrated AirBox Stations": calStations
+        "EPA Stations": epaStations
       };
 
       map.on("overlayadd baselayerchange", event => {
