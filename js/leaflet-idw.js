@@ -345,8 +345,9 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
       station_range = this.options.station_range || 10,
       maxVal = this.options.maxVal || 150.0,
       minVal = this.options.minVal || 0.0;
-
-    console.time('process ' + this._latlngs.length);
+    console.log("Zoom level:", map.getZoom());
+    console.log("Cells:", nCellY * nCellX);
+    console.log("Data points:", this._latlngs.length);
 
     // -- cclljj
     // left top lat lon coordinate of the screen
@@ -379,6 +380,16 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
       }
     }
 
+    // 10 km per degree
+    let tenKmPerLng = 10 / 104.64;
+    let tenKmPerLat = 10 / 110.69;
+    // limit the coordinate
+    leftTop.lat += tenKmPerLat
+    leftTop.lng -= tenKmPerLng;
+    rightBottom.lat -= tenKmPerLat;
+    rightBottom.lng += tenKmPerLng;
+    let pointCounter = 0;
+    console.time("process idw in bounds");
     for (var k = 0; k < numberOfData; k++) {
       // check whether IDW value is valid
       if(isNaN(this._latlngs[k][dataType])
@@ -387,6 +398,14 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
         // console.log("malfunction station: ", this._latlngs[k]);
         continue;
       }
+      // eliminate data outside the screen
+      if(this._latlngs[k][0] > leftTop.lat ||
+         this._latlngs[k][0] < rightBottom.lat ||
+         this._latlngs[k][1] < leftTop.lng ||
+         this._latlngs[k][1] > rightBottom.lng) {
+        continue;
+      }
+      pointCounter++;
       // p is the pixel coordinate of _latlngs[k] on the screen
       var p = this._map.latLngToContainerPoint(L.latLng(this._latlngs[k][0], this._latlngs[k][1])),
         // left pixel coordinate of the cell
@@ -405,27 +424,27 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
       y2 = Math.ceil(y2 / r - 0.5);
 
       // check if x1, x2, y1, y2 out of cellsn, cellsd bounds
-      if (x1 < 0) {
-        x1 = 0;
-      }
       if (x2 < 0) {
         continue;
       }
       if (x1 >= nCellX) {
         continue;
       }
-      if (x2 >= nCellX) {
-        x2 = nCellX - 1;
-      }
-
-      if (y1 < 0) {
-        y1 = 0;
-      }
       if (y2 < 0) {
         continue;
       }
       if (y1 >= nCellY) {
         continue;
+      }
+
+      if (x1 < 0) {
+        x1 = 0;
+      }
+      if (x2 >= nCellX) {
+        x2 = nCellX - 1;
+      }
+      if (y1 < 0) {
+        y1 = 0;
       }
       if (y2 >= nCellY) {
         y2 = nCellY - 1;
@@ -439,16 +458,8 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
             // cellsd = -1
             continue;
           }
-
-          // pixel coordinate of _latlon[k]
-          // _latlon = [lat, lon, AQI]
-          var p = this._map.latLngToContainerPoint([this._latlngs[k][0], this._latlngs[k][1]]);
-
           // estimated point pixel coordinate
           var cp = L.point((j * r + cellCen), (i * r + cellCen));
-
-          // pixel distance
-          var distInPixels = cp.distanceTo(p);
 
           // distance in km on x-axis
           var LJ_x = (p.x - cp.x) * offsetX;
@@ -462,6 +473,8 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
 
           // IDW value
           var val = this._latlngs[k][dataType];
+          // pixel distance
+          var distInPixels = cp.distanceTo(p);
 
           if (distInPixels === 0.0) {
             // cell center fills in original value
@@ -475,7 +488,7 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
         }
       }
     }
-
+    console.log("Points for idw:", pointCounter);
     for (var i = 0; i < nCellY; i++) {
       for (var j = 0; j < nCellX; j++) {
         if (cellsd[i][j] < 0.0) {
@@ -500,12 +513,10 @@ L.IdwLayer = (L.Layer ? L.Layer : L.Class).extend({
         }
       }
     }
-
-    console.timeEnd('process ' + this._latlngs.length);
-    console.time('draw ' + data.length);
-    
+    console.timeEnd("process idw in bounds");
+    console.time("draw");
     this._idw.data(data).draw(this.options.opacity);
-    console.timeEnd('draw ' + data.length);
+    console.timeEnd("draw");
     this._frame = null;
   },
 
