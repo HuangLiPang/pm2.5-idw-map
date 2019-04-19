@@ -26,37 +26,18 @@
 
       defaultCellSize: 25,
 
-      defaultGradients: {
-        0.001: "#FFFFFF",
-        0.01: "#CCCCFF",
-        0.03: "#BBBBEE",
-        0.06: "#AAAADD",
-        0.08: "#9999CC",
-        0.10: "#8888BB",
-
-        0.12: "#90FA96",
-        0.14: "#82EA64",
-        0.16: "#66DA36",
-        0.18: "#50CA2C",
-        0.20: "#4ABA26",
-
-        0.25: "#FAFA5D",
-        0.30: "#EAEA46",
-        0.35: "#DADA4D",
-        0.40: "#CACA42",
-        0.50: "#BABA36",
-
-        0.6: "#FF7777",
-        0.7: "#EE6666",
-        0.8: "#DD5555",
-        0.9: "#CC4444",
-        1.0: "#BB3333",
-
-        1.1: "#E046E0",
-        1.2: "#D03DD0",
-        1.3: "#C032C0",
-        1.4: "#B026B0",
-        1.5: "#A01DA0"
+      defaultGradient: {
+        0.0: '#000066',
+        0.1: 'blue',
+        0.2: 'cyan',
+        0.3: 'lime',
+        0.4: 'yellow',
+        0.5: 'orange',
+        0.6: 'red',
+        0.7: 'Maroon',
+        0.8: '#660066',
+        0.9: '#990099',
+        1.0: '#ff66ff'
       },
 
       data: function(data) {
@@ -125,7 +106,6 @@
 
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, 1, 256);
-
         this._grad = ctx.getImageData(0, 0, 1, 256).data;
 
         return this;
@@ -142,22 +122,19 @@
         if(this._min !== 0) {
           for (var i = 0, len = this._data.length, p; i < len; i++) {
             p = this._data[i];
-            if(p[2] < this._min) {
-              // cell not used
-              continue;
-            }
+            // cell not used
+            if(p[2] < this._min) continue;
             ctx.globalAlpha = this._numberLineTranslation(p[2]) / (this._max - this._min);
-            ctx.drawImage(this._cell, p[0], p[1]);
+            ctx.drawImage(this._cell, p[0] - this._r / 2, p[1] - this._r / 2);
           }
         } else {
           for (var i = 0, len = this._data.length, p; i < len; i++) {
             p = this._data[i];
-            if(p[2] < this._min) {
-              // cell not used
-              continue;
-            }
+            // cell not used
+            if(p[2] < this._min) continue;
+            if(p[2] === 0) p[2] = 0.3;
             ctx.globalAlpha = p[2] / this._max;
-            ctx.drawImage(this._cell, p[0], p[1]);
+            ctx.drawImage(this._cell, p[0] - this._r / 2, p[1] - this._r / 2);
           }
         }
         // colorize the heatmap, using opacity value of each pixel to get the right color from our gradient
@@ -177,7 +154,7 @@
           pixels[i] = gradient[j];
           pixels[i + 1] = gradient[j + 1];
           pixels[i + 2] = gradient[j + 2];
-          pixels[i + 3] = opacity * 256;
+          pixels[i + 3] = opacity * 255;
         }
       },
 
@@ -185,9 +162,7 @@
         // if idwValue == 0 will be skip 
         // so the actual min value on the canvas will be 0.1
         let returnValue = idwValue - this._min;;
-        if(returnValue < 1.0) {
-          return 0.5;
-        }
+        if(returnValue < 1.0) return 0.3;
         return returnValue;
       }
     },
