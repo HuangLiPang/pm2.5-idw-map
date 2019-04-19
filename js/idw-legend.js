@@ -20,7 +20,9 @@ L.Control.IDWLegend = L.Control.extend({
       let color = this.gradients[i].value;
         gradesLabels +=
           `<i style="background:${color};">&nbsp;&nbsp;&nbsp;&nbsp;</i>&nbsp;` + 
-        `${this._formatNumber(numLength, this.gradients[i].key)}${(this.gradients[i + 1] ? `&nbsp;~&nbsp;${this._formatNumber(numLength, this.gradients[i + 1].key)}` : '+')}<br>`;
+          `${this._formatNumber(numLength, this.gradients[i].key)}` + 
+          `${(this.gradients[i + 1] ? 
+            `&nbsp;~&nbsp;${this._formatNumber(numLength, this.gradients[i + 1].key)}` : '+')}<br>`;
     }
     container.innerHTML =
       `<div class="leaflet-control-layers-base">
