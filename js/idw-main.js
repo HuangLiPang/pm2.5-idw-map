@@ -98,10 +98,6 @@
     "data/calibration.json"
   ];
 
-  urls.forEach((url, index, array) => {
-    array[index] = "https://pm25.lass-net.org/GIS/IDW/" + url;
-  });
-
   Promise.all(urls.map(url => makeRequest('GET', url)))
     .then(texts => {
       // parse all texts to json objects
