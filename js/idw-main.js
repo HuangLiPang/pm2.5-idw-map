@@ -83,7 +83,7 @@
   let contourInterval10;
   let overlayers;
 
-  let pm25Legend, temperatureLegend, cpLegend;
+  let pm25Legend, temperatureLegend;
   
   // map tile
   let attribution = `<a target="_blank" rel="noopener noreferrer" href='http://creativecommons.org/licenses/by-nc-sa/4.0/'>CC-BY-NC-SA</a> | ` + 
@@ -118,77 +118,6 @@
       let cwbPoints = jsons[2].points;
       let epaPoints = jsons[3].points;
       let calPoints = jsons[4].points;
-
-
-
-      // compare EPA
-      let comparePoints = [];
-
-      let findNearestStation = function(point, targets) {
-        let distanceArray = [];
-        targets.forEach((target, index) => {
-          distanceArray.push([index, map.distance(
-            [point[0], point[1]], 
-            [target[0],target[1]])]
-          );
-        });
-        distanceArray.sort((a, b) => {
-          if(a[1] > b[1]) return 1;
-          if(a[1] < b[1]) return -1;
-          return 0;
-        });
-        return distanceArray[0];
-      };
-      airboxPoints.forEach((point, index) => {
-        let nearest = findNearestStation(point, epaPoints);
-        // console.log(point[2] / epaPoints[nearest[0]][2]);
-        comparePoints.push([point[0], point[1], point[2] / epaPoints[nearest[0]][2]]);
-      });
-      let cpGradient = {
-        0: "#9C27B0",
-        0.1: "#673AB7",
-        0.2: "#3F51B5",
-        0.3: "#2196F3",
-        0.4: "#29B6F6",
-        0.5: "#4FC3F7",
-        0.6: "#4DD0E1",
-
-        0.7: "#4DB6AC",
-        0.8: "#26A69A",
-        0.9: "#009688",
-        1.0: "#4CAF50",
-        1.1: "#66BB6A",
-        1.2: "#9CCC65",
-        1.3: "#AED581",
-
-        1.4: "#DCE775",
-        1.5: "#FFF176",
-        1.6: "#FFEE58",
-        1.7: "#FFC107",
-        1.8: "#FF9800",
-        1.9: "#FB8C00",
-        2.0: "#E64A19",
-
-        3.0: "#BF360C",
-        4.0: "#8D6E63",
-        5.0: "#795548",
-        6.0: "#6D4C41"
-      };
-      let cpOptions =  {
-        opacity: 0.5,
-        maxZoom: mapOptions.maxZoom,
-        minZoom: mapOptions.minZoom,
-        cellSize: 5,
-        exp: 2,
-        gradient: cpGradient,
-        dataType: 2,
-        station_range: 10,
-        minVal: 0.0,
-        maxVal: 6.0
-      };
-
-      let cpIDWLayer = new L.idwLayer(comparePoints, cpOptions);
-      // compare EPA
 
       let pm25IDWOptions = {
         // opacity  - the opacity of the IDW layer
@@ -263,11 +192,10 @@
       baselayers = {
         // IDW layers
         "AirBox PM2.5": pm25IDWLayer.addTo(map),
-        "EPA PM2.5": epaPm25IDWLayer,
-        "AirBox vs EPA": cpIDWLayer,
-        "Calibrated AirBox PM2.5": calPm25IDWLayer,
         "AirBox Temperature": temperatureIDWLayer,
         "CWB Temperature": cwbTempIDWLayer,
+        "EPA PM2.5": epaPm25IDWLayer,
+        "Calibrated AirBox PM2.5": calPm25IDWLayer,
       };
       // overlayers
       contourInterval10 = new L.geoJson(jsons[1], {
@@ -329,9 +257,7 @@
       };
 
       map.on("overlayadd baselayerchange", event => {
-        document
-          .getElementsByClassName("leaflet-idwmap-layer leaflet-layer leaflet-zoom-animated")[0]
-          .style.zIndex = "0";
+        document.getElementsByClassName("leaflet-idwmap-layer leaflet-layer leaflet-zoom-animated")[0].style.zIndex = "0";
       });
 
       // add layer controller to map
@@ -350,7 +276,7 @@
         // change gradient when baselayer change
         map.on("baselayerchange", function(baselayer){
           let layers = document.getElementsByClassName("leaflet-control-layers-selector");
-          if(baselayer.name.includes("PM2.5") || baselayer.name.includes("vs")) {
+          if(baselayer.name.includes("PM2.5")) {
             for (let i = layers.length - 1; i >= 0; i--) {
               if(layers[i].type === "checkbox") {
                 layers[i].disabled = false;
@@ -361,8 +287,7 @@
               map.removeLayer(overlayers["PM2.5 Contour Interval: 10"]);
             }
             for (let i = layers.length - 1; i >= 0; i--) {
-              if(layers[i].type === "checkbox" && 
-                layers[i].nextSibling.innerText.includes("Contour")) {
+              if(layers[i].type === "checkbox" && layers[i].nextSibling.innerText.includes("Contour")) {
                 layers[i].disabled = true;
                 layers[i].checked = false;
               }
@@ -373,10 +298,6 @@
         // PC mode
         // add legends
         // IDW legend
-        cpLegend = new L.control.IDWLegend(cpGradient, {
-          position: 'bottomright',
-          unit: ""
-        });
         map.addControl(L.control.zoom({position: "topright"}));
         pm25Legend = new L.control.IDWLegend(pm25Gradient, {
           position: 'bottomright',
@@ -391,8 +312,7 @@
         map.on("baselayerchange", function(baselayer) {
           let layers = document.getElementsByClassName("leaflet-control-layers-selector");
           if(baselayer.name.includes("PM2.5")) {
-            if(temperatureLegend._map) temperatureLegend.remove();
-            if(cpLegend._map) cpLegend.remove();
+            temperatureLegend.remove();
             pm25Legend.addTo(map);
             for (let i = layers.length - 1; i >= 0; i--) {
               if(layers[i].type === "checkbox") {
@@ -400,26 +320,15 @@
               }
             }
           } else if(baselayer.name.includes("Temperature")) {
-            if(cpLegend._map) cpLegend.remove();
-            if(pm25Legend) pm25Legend.remove();
+            pm25Legend.remove();
             temperatureLegend.addTo(map);
             if(map.hasLayer(overlayers["PM2.5 Contour Interval: 10"])) {
               map.removeLayer(overlayers["PM2.5 Contour Interval: 10"]);
             }
             for (let i = layers.length - 1; i >= 0; i--) {
-              if(layers[i].type === "checkbox" && 
-                layers[i].nextSibling.innerText.includes("Contour")) {
+              if(layers[i].type === "checkbox" && layers[i].nextSibling.innerText.includes("Contour")) {
                 layers[i].disabled = true;
                 layers[i].checked = false;
-              }
-            }
-          } else if(baselayer.name.includes("vs")) {
-            if(temperatureLegend._map) temperatureLegend.remove();
-            if(pm25Legend) pm25Legend.remove();
-            cpLegend.addTo(map);
-            for (let i = layers.length - 1; i >= 0; i--) {
-              if(layers[i].type === "checkbox") {
-                layers[i].disabled = false;
               }
             }
           }
@@ -464,10 +373,10 @@
             idwMarker = new L.idwMarker(
               pos, {
                 range: 10.0,
-                dataOptions: [[2, 0.0], [3, -20.0], [2, -20.0], [2, 0.0], [2, 0.0], [2, 0.0]],
+                dataOptions: [[2, 0.0], [3, -20.0], [2, -20.0], [2, 0.0], [2, 0.0]],
                 p: 2,
                 radius: 5,
-                points: [airboxPoints, airboxPoints, cwbPoints, epaPoints, calPoints, comparePoints]
+                points: [airboxPoints, airboxPoints, cwbPoints, epaPoints, calPoints]
               }).addTo(map);
           }
           idwDisplay = L.control.displayIDW(idwMarker.getIDW(), {
