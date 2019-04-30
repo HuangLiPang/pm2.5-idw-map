@@ -139,7 +139,7 @@
         });
         return distanceArray[0];
       };
-      calPoints.forEach((point, index) => {
+      airboxPoints.forEach((point, index) => {
         let nearest = findNearestStation(point, epaPoints);
         // console.log(point[2] / epaPoints[nearest[0]][2]);
         comparePoints.push([point[0], point[1], point[2] / epaPoints[nearest[0]][2]]);
@@ -264,8 +264,8 @@
         // IDW layers
         "AirBox PM2.5": pm25IDWLayer.addTo(map),
         "EPA PM2.5": epaPm25IDWLayer,
+        "AirBox vs EPA": cpIDWLayer,
         "Calibrated AirBox PM2.5": calPm25IDWLayer,
-        "Calibrated AirBox vs EPA": cpIDWLayer,
         "AirBox Temperature": temperatureIDWLayer,
         "CWB Temperature": cwbTempIDWLayer,
       };
