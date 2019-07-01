@@ -12,13 +12,14 @@ L.IdwMarker = L.CircleMarker.extend({
     let IDWValues = [[this._latlng.lat, this._latlng.lng]];
     for(let i = 0; i < numberOfDataType; i++) {
       IDWValues.push(this._IDW(i));
+      i = 100;
     }
     return IDWValues;
   },
   _filter: function(dataOptionIndex) {
     return this.options.points[dataOptionIndex].filter(point => {
-      let Coordinate = new L.latLng(point[0], point[1]);
-      let distance = Coordinate.distanceTo(this._latlng) / 1000.0;
+      let coordinate = new L.latLng(point[0], point[1]);
+      let distance = coordinate.distanceTo(this._latlng) / 1000.0;
       return distance < this.options.range;
     });
   },
@@ -46,7 +47,7 @@ L.IdwMarker = L.CircleMarker.extend({
       if(distance === 0.0) {
         return inCell[i][dataType];
       }
-      let distanceRev = 1.0 / (distance ^ p);
+      let distanceRev = 1.0 / Math.pow(distance, p);
       if(distanceRev !== Infinity) {
         if(inCell[i][dataType] >= min) {
           cellsn += distanceRev * inCell[i][dataType];
