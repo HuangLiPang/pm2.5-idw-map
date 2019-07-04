@@ -235,7 +235,7 @@
         exp: 2,
         gradient: pm25Gradient,
         dataType: 2,
-        station_range: 10,
+        station_range: 25,
         minVal: 0.0,
         maxVal: 150.0
       };
@@ -459,7 +459,7 @@
           } else {
             idwMarker = new L.idwMarker(
               pos, {
-                range: 10.0,
+                ranges: [10.0, 10.0, 10.0, 25.0, 10.0, 10.0],
                 dataOptions: [[2, 0.0], [3, -20.0], [2, -20.0], [2, 0.0], [2, 0.0], [2, 0.0]],
                 p: 2,
                 radius: 5,

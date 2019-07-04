@@ -12,7 +12,6 @@ L.IdwMarker = L.CircleMarker.extend({
     let IDWValues = [[this._latlng.lat, this._latlng.lng]];
     for(let i = 0; i < numberOfDataType; i++) {
       IDWValues.push(this._IDW(i));
-      i = 100;
     }
     return IDWValues;
   },
@@ -20,7 +19,7 @@ L.IdwMarker = L.CircleMarker.extend({
     return this.options.points[dataOptionIndex].filter(point => {
       let coordinate = new L.latLng(point[0], point[1]);
       let distance = coordinate.distanceTo(this._latlng) / 1000.0;
-      return distance < this.options.range;
+      return distance < this.options.ranges[dataOptionIndex];
     });
   },
   _IDW: function(dataOptionIndex) {
